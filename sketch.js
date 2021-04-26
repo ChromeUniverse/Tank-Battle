@@ -9,12 +9,13 @@ const canvasW = 600;
 const canvasH = 530;
 
 // thingy dimensions
-const thingyW = 40;
+const thingyW = 60;
 const thingyH = 40;
 
 // player speed
 const speedX = 4;
 const speedY = 4;
+const player_speed = 2;
 
 // bullet parameters
 const bullet_speed = 7;
@@ -34,12 +35,14 @@ let bullets = [];
 
 class Player{
   // creates new player instance
-  constructor(id, name, col, x, y){
+  constructor(id, name, col, x, y, vel){
     this.id = id;
     this.name = name;
     this.col = col; // color
     this.x = x;
     this.y = y;
+
+    this.vel = vel;
     this.hit = false;
   
   }
@@ -47,7 +50,7 @@ class Player{
   // renders the player on the canvas
   display() {
     
-    // highlight user with a thin white border
+    // highlight user with a thin black border
     if (this.id == user.id) {
       strokeWeight(3);
       stroke('rgb(38, 38, 61)');
@@ -55,6 +58,7 @@ class Player{
       noStroke();
     }
     
+    // draw red border if player was hit
     if (this.hit) {
       // draw thingy
       fill('#FF0000');      
@@ -62,10 +66,17 @@ class Player{
       // draw thingy
       fill(this.col);
     }
-    rectMode(CENTER);
-    rect(this.x, this.y, thingyW, thingyH, 10, 10);
     
-
+    push();
+    angleMode(RADIANS);
+    // console.log(angle);
+    translate(this.x, this.y);
+    rotate(-this.vel.heading());
+    rectMode(CENTER);
+    rect(0, 0, thingyW, thingyH,);
+    pop();
+    
+    
     noStroke();
     // show player name 
     textSize(20);
@@ -73,13 +84,16 @@ class Player{
     textAlign(CENTER, BOTTOM);
     text(this.name, this.x, this.y+thingyH/2+30);  
     
+    
   }
 
+  // edge helper function
   top() {return this.y - thingyH/2}
   left() {return this.x - thingyW/2}
   bottom() {return this.y + thingyH/2}
   right() {return this.x + thingyW/2}
 
+  // check for collision with other players
   colliding(p2) {
     if ( this.top() > p2.bottom() || this.right() < p2.left() || this.bottom() < p2.top() || this.left() > p2.right() ) {
       return false;
@@ -198,16 +212,23 @@ let minY = thingyH;
 let maxY = canvasH-thingyH;
 
 
+// creating user
+
 const userID = 'Lucca';
 const userName = 'Lucca';
 const userColor = '#123456';
 
-let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
-let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
+// let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
+// let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
+let userX = 200;
+let userY = 200;
 
-let user = new Player(userID, userName, userColor, userX, userY);
+let vel_vector = new p5.Vector.fromAngle(90 * (Math.PI/180), player_speed);
+let user = new Player(userID, userName, userColor, userX, userY, vel_vector);
 players.push(user);
 
+
+// creating targets
 
 let targetID = 'qrno'
 let targetName = 'qrno';
@@ -217,7 +238,7 @@ for (let i = 0; i < 8; i++) {
   let targetX = Math.floor(Math.random() * (maxX-minX) ) + minX;
   let targetY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
-  let target = new Player(targetID, targetName, targetColor, targetX, targetY);
+  let target = new Player(targetID, targetName, targetColor, targetX, targetY, p5.Vector.fromAngle(0 * (Math.PI/180), player_speed));
   players.push(target);
   
 }
@@ -260,13 +281,15 @@ function shoot() {
 
 
 // change user position based on keypresses
-function keys() {
+function keys(p) {
   let moved = false;
   let keystrokes = '';
   
-  let x = user.x;
-  let y = user.y;  
+  let x = p.x;
+  let y = p.y;  
+  let angle = p.vel.heading();
 
+  /*
   if (keyIsDown(87)) {
     // w
     moved = true;
@@ -295,6 +318,35 @@ function keys() {
     x += speedX; 
     if (x > canvasW-thingyW/2) { x = canvasW-thingyW/2; }
   }
+  */
+
+  if (keyIsDown(87)) {
+    // w
+    moved = true;
+    keystrokes += 'w'; 
+    x += p.vel.x;
+    y -= p.vel.y;
+  }
+  if (keyIsDown(65)) {
+    // a
+    moved = true;
+    keystrokes += 'a';
+    p.vel.setHeading(angle + 2 * (Math.PI/180));
+  }
+  if (keyIsDown(83)) {
+    // s
+    moved = true;
+    keystrokes += 'w'; 
+    x -= p.vel.x;
+    y += p.vel.y;
+  }
+  if (keyIsDown(68)) {
+    // d
+    moved = true;
+    keystrokes += 'a';
+    p.vel.setHeading(angle - 2 * (Math.PI/180));
+  }
+  
   
   if (mouseIsPressed){
     // shoot ball when mouse is pressed    
@@ -336,7 +388,7 @@ function inFront(p1, p2){
 function draw() {
   background(220);
 
-  keys(); 
+  keys(user); 
 
   players.forEach(p => {
     if (user.colliding(p)) {
