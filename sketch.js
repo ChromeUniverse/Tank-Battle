@@ -44,6 +44,7 @@ class Player{
 
     this.vel = vel;
     this.hit = false;
+    this.aim = vel;
   
   }
 
@@ -59,21 +60,48 @@ class Player{
     }
     
     // draw red border if player was hit
-    if (this.hit) {
-      // draw thingy
-      fill('#FF0000');      
-    } else {
-      // draw thingy
-      fill(this.col);
-    }
+    
     
     push();
-    angleMode(RADIANS);
-    // console.log(angle);
+
     translate(this.x, this.y);
     rotate(-this.vel.heading());
     rectMode(CENTER);
-    rect(0, 0, thingyW, thingyH,);
+
+    // tank treads
+    noStroke()
+    fill(color(0));
+    rect(0, 20, 50, 10, 2, 2);
+    fill(color(0));
+    rect(0, -20, 50, 10, 2, 2);
+
+    // tank body
+    if (this.hit) {
+      fill('#FF0000');      
+      rect(0, 0, thingyW, thingyH, 5, 5);
+    } else {
+      fill(this.col);
+      rect(0, 0, thingyW, thingyH, 5, 5);
+      fill('#FFFFFF');        
+    }
+    
+
+    rotate(+this.vel.heading());
+    // tank barrel
+    rotate(this.aim.heading());
+    fill(color(0));
+    rect(10, 0, 30, 10);
+    rotate(-this.aim.heading());
+    
+
+    // tank turret 
+    rotate(-this.vel.heading());
+    fill(color(100));
+    ellipse(0,0, 25, 25);
+    fill('#FFFFFF');
+    triangle(-3, -4, -3, 4, 5, 0);
+
+    
     pop();
     
     
@@ -115,8 +143,8 @@ class Bullet {
     this.id = p.id;       // -> ID of player who shot bullet
     this.name = p.name;   // -> name of player who shot bullet
     this.col = p.col;
-    this.x = p.x + 5*vel.x;
-    this.y = p.y + 5*vel.y;
+    this.x = p.x + 6*vel.x;
+    this.y = p.y + 6*vel.y;
     // this.x = p.x;
     // this.y = p.y;
     this.time = time;   // -> time the bullet was shot
@@ -234,11 +262,11 @@ let targetID = 'qrno'
 let targetName = 'qrno';
 let targetColor = '#f28500';
 
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 5; i++) {
   let targetX = Math.floor(Math.random() * (maxX-minX) ) + minX;
   let targetY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
-  let target = new Player(targetID, targetName, targetColor, targetX, targetY, p5.Vector.fromAngle(0 * (Math.PI/180), player_speed));
+  let target = new Player(targetID, targetName, targetColor, targetX, targetY, p5.Vector.fromAngle(0 * (Math.PI/180), player_speed) );
   players.push(target);
   
 }
@@ -289,74 +317,47 @@ function keys(p) {
   let y = p.y;  
   let angle = p.vel.heading();
 
-  /*
-  if (keyIsDown(87)) {
-    // w
-    moved = true;
-    keystrokes += 'w'; 
-    y -= speedY; 
-    if (y < thingyH/2) { y = thingyH/2; }   
-  }
-  if (keyIsDown(65)) {
-    // a
-    moved = true;
-    keystrokes += 'a';
-    x -= speedX; 
-    if (x < thingyW/2) { x = thingyW/2; }
-  }
-  if (keyIsDown(83)) {
-    // s
-    moved = true;
-    keystrokes += 's';
-    y += speedY; 
-    if (y > canvasH-thingyH/2) { y = canvasH-thingyH/2; }
-  }
-  if (keyIsDown(68)) {
-    // d
-    moved = true;
-    keystrokes += 'd';
-    x += speedX; 
-    if (x > canvasW-thingyW/2) { x = canvasW-thingyW/2; }
-  }
-  */
 
-  if (keyIsDown(87)) {
-    // w
-    moved = true;
-    keystrokes += 'w'; 
-    x += p.vel.x;
-    y -= p.vel.y;
-  }
-  if (keyIsDown(65)) {
-    // a
-    moved = true;
-    keystrokes += 'a';
-    p.vel.setHeading(angle + 2 * (Math.PI/180));
-  }
-  if (keyIsDown(83)) {
-    // s
-    moved = true;
-    keystrokes += 'w'; 
-    x -= p.vel.x;
-    y += p.vel.y;
-  }
-  if (keyIsDown(68)) {
-    // d
-    moved = true;
-    keystrokes += 'a';
-    p.vel.setHeading(angle - 2 * (Math.PI/180));
+  if (!user.hit) {
+    if (keyIsDown(87)) {
+      // w
+      moved = true;
+      keystrokes += 'w'; 
+      x += p.vel.x;
+      y -= p.vel.y;
+    }
+    if (keyIsDown(65)) {
+      // a
+      moved = true;
+      keystrokes += 'a';
+      p.vel.setHeading(angle + 2 * (Math.PI/180));
+    }
+    if (keyIsDown(83)) {
+      // s
+      moved = true;
+      keystrokes += 'w'; 
+      x -= p.vel.x;
+      y += p.vel.y;
+    }
+    if (keyIsDown(68)) {
+      // d
+      moved = true;
+      keystrokes += 'a';
+      p.vel.setHeading(angle - 2 * (Math.PI/180));
+    }
+    
+    user.x = x;
+    user.y = y;
   }
   
+
   
   if (mouseIsPressed){
     // shoot ball when mouse is pressed    
     shoot();
   }
 
-  if (!user.hit) {
-    user.x = x;
-    user.y = y;  
-  }
+  
   
   return [moved, keystrokes];
 
@@ -389,6 +390,8 @@ function draw() {
   background(220);
 
   keys(user); 
+  let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
+  user.aim = aim_vector;
 
   players.forEach(p => {
     if (user.colliding(p)) {
