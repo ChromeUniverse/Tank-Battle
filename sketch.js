@@ -13,13 +13,13 @@ const thingyW = 40;
 const thingyH = 40;
 
 // player speed
-const speedX = 5;
-const speedY = 5;
+const speedX = 4;
+const speedY = 4;
 
 // bullet parameters
-const bullet_speed = 2;
-const bullet_interval = 350;
-const bullet_diam = 25;
+const bullet_speed = 7;
+const bullet_interval = 400;
+const bullet_diam = 20;
 
 
 // local list of players
@@ -101,11 +101,14 @@ class Bullet {
     this.id = p.id;       // -> ID of player who shot bullet
     this.name = p.name;   // -> name of player who shot bullet
     this.col = p.col;
-    this.x = p.x;         
-    this.y = p.y;
+    this.x = p.x + 5*vel.x;
+    this.y = p.y + 5*vel.y;
+    // this.x = p.x;
+    // this.y = p.y;
     this.time = time;   // -> time the bullet was shot
     this.vel = vel;     // -> velocity vector
-    this.bounces = 0;
+    this.bounces = 0;    
+    
   }
 
   // check for collisions
@@ -141,6 +144,7 @@ class Bullet {
     // update position
     this.x += this.vel.x;
     this.y += this.vel.y;
+    
 
     // draw bullet
     fill(this.col);
@@ -152,29 +156,25 @@ class Bullet {
     if (this.y <= bullet_diam/2) {      
       let new_vel = createVector(this.vel.x, -this.vel.y);  
       this.vel = new_vel;      
-      this.bounces += 1;    
-      console.log(this.bounces);
+      this.bounces += 1;          
     }
     // left edge
     if (this.x <= bullet_diam/2) {
       let new_vel = createVector(-this.vel.x, this.vel.y);
       this.vel = new_vel;
       this.bounces += 1;
-      console.log(this.bounces);
     }
     // bottom edge
     if (this.y >= canvasH-bullet_diam/2) {
       let new_vel = createVector(this.vel.x, -this.vel.y);
       this.vel = new_vel;
       this.bounces += 1;
-      console.log(this.bounces);
     }
     // right edge
     if (this.x >= canvasW-bullet_diam/2) {
       let new_vel = createVector(-this.vel.x, this.vel.y);
       this.vel = new_vel;
       this.bounces += 1;
-      console.log(this.bounces);
     }
     
     
@@ -236,24 +236,25 @@ for (let i = 0; i < 8; i++) {
 
 
 function shoot() {
-  let vel = createVector(mouseX - user.x, mouseY - user.y);
-  let velNormal = vel.normalize();
-  let velScaled = velNormal.mult(bullet_speed);
+  if (!user.hit) {
+    let vel = createVector(mouseX - user.x, mouseY - user.y);
+    let velNormal = vel.normalize();
+    let velScaled = velNormal.mult(bullet_speed);
 
-  if (bullets.length > 0) {
-    // only add new bullet after [bullet_interval] seconds have passed
-    let last_time = bullets[bullets.length-1].time;
+    if (bullets.length > 0) {
+      // only add new bullet after [bullet_interval] seconds have passed
+      let last_time = bullets[bullets.length-1].time;
 
-    if ( Date.now() - last_time > bullet_interval ) {
+      if ( Date.now() - last_time > bullet_interval ) {
+        let bullet = new Bullet(user, Date.now(), velScaled);   
+        bullets.push(bullet);
+      }
+
+    } else {
       let bullet = new Bullet(user, Date.now(), velScaled);   
       bullets.push(bullet);
     }
-
-  } else {
-    let bullet = new Bullet(user, Date.now(), velScaled);   
-    bullets.push(bullet);
   }
-  
   
 }
 
@@ -261,12 +262,10 @@ function shoot() {
 // change user position based on keypresses
 function keys() {
   let moved = false;
-
   let keystrokes = '';
   
   let x = user.x;
   let y = user.y;  
-
 
   if (keyIsDown(87)) {
     // w
@@ -302,9 +301,13 @@ function keys() {
     shoot();
   }
 
-  user.x = x;
-  user.y = y;
+  if (!user.hit) {
+    user.x = x;
+    user.y = y;  
+  }
   
+  return [moved, keystrokes];
+
 }
 
 /*
@@ -336,11 +339,11 @@ function draw() {
   keys(); 
 
   players.forEach(p => {
-    if (p.id != user.id) {
-      if (user.colliding(p)){
+    if (user.colliding(p)) {
+      if (p.id != user.id){
         console.log(user.name + ' collided with ' + p.name);
       }
-    }
+    } 
   });
 
   // let render = [];
@@ -360,9 +363,14 @@ function draw() {
 
   // removing bullets
   bullets_copy = [];
+
+  // update positions and draw them
   bullets.forEach(b => {    
-    // update positions and draw them
     b.display();
+  });
+
+  // checking for collisions
+  bullets.forEach(b => {        
 
     let add;
 
@@ -370,30 +378,34 @@ function draw() {
       add = true;
     }  
 
-    // checking for collisions with players
+    // bullet X player
     players.forEach(p => {
-
       if (b.colliding(p)){        
-        if (b.name != p.name) {
+
+        if (b.id != p.id) {
           console.log(b.name + "'s bullet hit " + p.name);
           p.hit = true;
           add = false;
-        }
-      }
-      
+        } 
+        
+        else {
+          console.log(b.name + ' is dead!');
+          p.hit = true;
+          add = false;
+        }        
+
+      }      
     });
     
-    // checking for collisions with bullets
+    // bullet X bullet
     bullets.forEach(b2 => {
-
       if (b.colliding(b2)){
         // don't compare bullet with itself        
         if (b.x != b2.x && b.y != b2.y) {
           console.log("Bullets collided!");
           add = false;
         }
-      }
-      
+      }      
     });
 
     if (add) {
