@@ -16,22 +16,22 @@ const thingyH = 40;
 const hit_radius = 30;
 
 // player speed
-// const speedX = 4;
-// const speedY = 4;
 const player_speed = 4;
 const rotation_speed = 4;
 
 // bullet parameters
 const bullet_speed = 7;
-const bullet_interval = 400;
+const bullet_interval = 350;
 const bullet_diam = 15;
 const reload_interval = 2000;
+const maxBounces = 4;
 const max_shots = 5;
 
 
 // local list of players
 let players = [];
 let bullets = [];
+let obstacles = [];
 
 /*
 
@@ -73,9 +73,11 @@ class Player{
       noStroke();
     }
 
-
-    // fill('#FF0000');
-    // ellipse(this.x, this.y, hit_radius*2, hit_radius*2);
+    /*
+    noStroke();
+    fill('#FF0000');
+    ellipse(this.x, this.y, hit_radius*2, hit_radius*2);
+    */
     
     
     push();
@@ -131,37 +133,39 @@ class Player{
     textAlign(CENTER, BOTTOM);
     text(this.name, this.x, this.y+thingyH/2+30);  
     
-    
   }
 
-  /*
-  // edge helper function
-  top() {return this.y - thingyH/2}
-  left() {return this.x - thingyW/2}
-  bottom() {return this.y + thingyH/2}
-  right() {return this.x + thingyW/2}
-
   // check for collision with other players
-  colliding(p2) {
-    if ( this.top() > p2.bottom() || this.right() < p2.left() || this.bottom() < p2.top() || this.left() > p2.right() ) {
-      return false;
-    } else {
-      return true;
+  colliding(thing) {
+
+    if (thing instanceof Player) {
+
+      // vector between both players
+      let dist = createVector(thing.x-this.x, thing.y-this.y);
+      let dist_mag = dist.mag();
+
+      if (dist_mag < hit_radius*2) {
+        let normal = dist.normalize().mult(hit_radius*2-dist_mag);
+        return [normal.x, normal.y];
+      } else {
+        return false;
+      }
+      
+
     }
+
   } 
-  */
+  
 }
 
 
 /*
 
-**************** Bullet Setup ****************
+**************** Bullet Class ****************
 
 */
 
 class Bullet {
-
-  
 
   constructor(p, time, vel) {
     this.id = p.id;       // -> ID of player who shot bullet
@@ -181,22 +185,16 @@ class Bullet {
   }
 
   // check for collisions
+
   colliding(thing){    
-    // vector between player and thing
+
+    // vector between bullet and thing
     let dist = createVector(thing.x-this.x, thing.y-this.y);
     let dist_mag = dist.mag();
 
-    // bullet collided with a player
-    if (thing instanceof Player) {            
-      /*
-      let deltaX = abs(dist.x);
-      let deltaY = abs(dist.y);      
-      if (deltaX < (thingyW + bullet_diam)/2 && deltaY < (thingyH + bullet_diam)/2 ) {      
-        return true;      
-      } else {
-        return false;
-      }
-      */
+
+    // bullet X player collision
+    if (thing instanceof Player) {           
 
       if (dist_mag < hit_radius+bullet_diam/2) {
         return true; 
@@ -205,7 +203,8 @@ class Bullet {
       }
     }
   
-    // bullet collided with another bullet
+
+    // bullet X bullet collision
     if (thing instanceof Bullet) {      
       if (dist_mag < bullet_diam) {
         return true; 
@@ -213,6 +212,49 @@ class Bullet {
         return false;
       }
     } 
+
+
+    // obstacle X bullet collision
+    if (thing instanceof Obstacle ) {
+
+      // get point at box nearest to bullet
+
+      // clamping bullet X coord to obstacle borders
+      let pointX = this.x;
+      pointX = min( pointX, thing.right() );
+      pointX = max( pointX, thing.left() );
+
+      // clamping player Y coord to obstacle borders
+      let pointY = this.y;
+      pointY = min( pointY, thing.bottom() );
+      pointY = max( pointY, thing.top() );
+
+      /*
+      noStroke();
+      fill('#0000ff');
+      ellipse(pointX, pointY, 5, 5);
+      */
+
+      // vector from nearest point to bullet 
+      let dist = new p5.Vector(this.x - pointX, this.y - pointY);
+      let dist_mag = dist.mag();
+
+      if (dist_mag < bullet_diam/2) {
+
+        // get normal vector
+        let normal = dist.normalize().mult(bullet_diam/2-dist_mag);
+
+        // reflect velocity vector and bounce
+        this.vel = this.vel.reflect(normal);
+        this.bounces += 1;
+
+        return [normal.x, normal.y];
+
+      } else {
+        return false;
+      }
+    
+    }
     
   }
 
@@ -251,11 +293,130 @@ class Bullet {
       this.vel = new_vel;
       this.bounces += 1;
     }
-    
+
+    // check for collisions with all obstacles
+    obstacles.forEach(box => {
+      this.colliding(box);  
+    });
+      
     
   }
 
 }
+
+
+
+
+
+/*
+
+**************** Bullet Class ****************
+
+*/
+
+
+class Obstacle {
+  constructor(x, y, w, h, col) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.col = col;
+  }
+
+  display() {
+    rectMode(CORNER);
+    noStroke();
+    fill(this.col);
+    rect(this.x, this.y, this.w, this.h);
+  }
+
+  // get edges
+  top() {return this.y}
+  left() {return this.x}
+  bottom() {return this.y + this.h;}
+  right() {return this.x + this.w;}
+
+  colliding(thing) {
+    // obstacle X player collision
+    if (thing instanceof Player) {
+      // get point at rectangle nearest to player
+
+      // clamping player X coord to obstacle borders
+      let pointX = thing.x;
+      pointX = min( pointX, this.right() );
+      pointX = max( pointX, this.left() );
+
+      // clamping player Y coord to obstacle borders
+      let pointY = thing.y;
+      pointY = min( pointY, this.bottom() );
+      pointY = max( pointY, this.top() );
+
+      /*
+      noStroke();
+      fill('#ff0000');
+      ellipse(pointX, pointY, 5, 5);
+      */
+
+      // vector from nearest point to player
+      let dist = new p5.Vector(thing.x - pointX, thing.y - pointY);
+      let dist_mag = dist.mag();
+
+      if (dist_mag < hit_radius) {
+        let normal = dist.normalize().mult(hit_radius-dist_mag);
+        return [normal.x, normal.y];
+      } else {
+        return false;
+      }
+
+    } 
+
+    
+    
+  }
+
+  /*
+  colliding(p) {
+    if ( this.top() > p.y + hit_radius || this.right() < p.x - hit_radius || this.bottom() < p.y - hit_radius || this.left() > p.x + hit_radius ) {
+      return false;
+    } else {
+      console.log('Collided!');
+      return true;
+    }
+  } 
+
+  top_col(p) {
+    if ( p.y + hit_radius > this.top() ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  left_col(p) {
+    if ( p.x + hit_radius < this.left() ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  bottom_col(p) {
+    if ( p.y - hit_radius < this.bottom() ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  right_col(p) {
+    if ( p.x - hit_radius > this.right() ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  */
+}
+
+
 
 
 
@@ -267,10 +428,11 @@ class Bullet {
 */
 
 // set random spawn position within canvas borders
-let minX = thingyW;
-let maxX = canvasW-thingyW;
-let minY = thingyH;
-let maxY = canvasH-thingyH;
+let minX = hit_radius;
+let maxX = canvasW-hit_radius;
+let minY = hit_radius;
+let maxY = canvasH-hit_radius;
+let startAngle = Math.floor(Math.random() * 360);
 
 
 // creating user
@@ -279,30 +441,60 @@ const userID = 'Lucca';
 const userName = 'Lucca';
 const userColor = '#2ba9c2';
 
-// let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
-// let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
-let userX = 200;
-let userY = 200;
+let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
+let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
-let vel_vector = new p5.Vector.fromAngle(90 * (Math.PI/180), player_speed);
+let vel_vector = new p5.Vector.fromAngle(startAngle * (Math.PI/180), player_speed);
 let user = new Player(userID, userName, userColor, userX, userY, vel_vector);
 players.push(user);
 
 
 // creating targets
 
+
 let targetID = 'qrno'
 let targetName = 'qrno';
 let targetColor = '#f28500';
 
-for (let i = 0; i < 5; i++) {
-  let targetX = Math.floor(Math.random() * (maxX-minX) ) + minX;
-  let targetY = Math.floor(Math.random() * (maxY-minY) ) + minY;
+let target = new Player(targetID, targetName, targetColor, 100, 100, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
+target = new Player(targetID, targetName, targetColor, 100, 400, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
+target = new Player(targetID, targetName, targetColor, 500, 350, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
+target = new Player(targetID, targetName, targetColor, 800, 120, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
+target = new Player(targetID, targetName, targetColor, 700, 500, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
+target = new Player(targetID, targetName, targetColor, 1100, 300, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
+players.push(target);
 
-  let target = new Player(targetID, targetName, targetColor, targetX, targetY, p5.Vector.fromAngle(0 * (Math.PI/180), player_speed) );
-  players.push(target);
-  
-}
+// creating obstacles
+
+let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(200, 300, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(200, 400, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(300, 400, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(400, 400, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(500, 400, 100, 100, '#7a7a7a');
+obstacles.push(box);
+
+box = new Obstacle(500, 50, 100, 100, '#7a7a7a');
+obstacles.push(box);
+
+box = new Obstacle(800, 400, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(800, 300, 100, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(800, 200, 200, 100, '#7a7a7a');
+obstacles.push(box);
+box = new Obstacle(900, 150, 100, 50, '#7a7a7a');
+obstacles.push(box);
 
 
 
@@ -354,7 +546,6 @@ function draw_shots_bar(p) {
   } else {
     p.reloading = false;
   }
-
 
 }
 
@@ -466,11 +657,35 @@ function keys(p) {
     }
     
     // canvas borders
-    if (x < thingyW/2) {x = thingyW/2;}
-    if (x > canvasW-thingyW/2) {x = canvasW-thingyW/2;}
-    if (y < thingyH/2) {y = thingyH/2;}
-    if (y > canvasH-thingyH/2) {y = canvasH-thingyH/2;}
+    x = max(x, hit_radius);
+    x = min(x, canvasW-hit_radius);
+    y = max(y, hit_radius);
+    y = min(y, canvasH-hit_radius);
 
+    // checking for obstacle collision
+    
+    obstacles.forEach(box => {
+      let result = box.colliding(user);
+      if (result != false){
+        x += result[0];
+        y += result[1];
+      }
+    });
+
+    // checking for player collision
+
+    players.forEach(p => {
+      if (p.id != user.id) {
+        let result = p.colliding(user);
+        if (result != false && !p.hit){
+          x += result[0];
+          y += result[1];
+        }
+      }
+    });
+
+    
+    
     // update position
     user.x = x;
     user.y = y;
@@ -514,11 +729,18 @@ function draw() {
   // get user input
   keys(user); 
 
-  // update barrel angle
+  // disable barrel aim if user is hit
   if (!user.hit) {
+    // update barrel angle
     let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
     user.aim = aim_vector;
   }
+
+
+  obstacles.forEach(o => {
+    o.display();
+  });
+
   
   /*
   // checking for player colisions
@@ -541,12 +763,12 @@ function draw() {
   // render.sort(inFront);
 
   // drawing players on screen
+
   players.sort(inFront);
   players.forEach(p => {
     p.display();    
   });
 
-  
 
 
   // removing bullets
@@ -573,9 +795,9 @@ function draw() {
   // checking for bullet collisions
   bullets.forEach(b => {        
 
-    let add;
+    let add; // bool
 
-    if (b.bounces < 3) {      
+    if (b.bounces < maxBounces) {      
       add = true;
     }  
 
@@ -597,7 +819,7 @@ function draw() {
         }        
 
       }      
-    });
+    }); 
     
     // bullet X bullet
     bullets.forEach(b2 => {
