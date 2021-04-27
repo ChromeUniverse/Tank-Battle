@@ -5,12 +5,15 @@
 */
 
 // canvas properties
-const canvasW = 600; 
-const canvasH = 530;
+const canvasW = 1200; 
+const canvasH = 600;
 
 // thingy dimensions
 const thingyW = 60;
 const thingyH = 40;
+
+// player hit-circle
+const hit_radius = 30;
 
 // player speed
 const speedX = 4;
@@ -18,9 +21,11 @@ const speedY = 4;
 const player_speed = 2;
 
 // bullet parameters
-const bullet_speed = 7;
+const bullet_speed = 3;
 const bullet_interval = 400;
 const bullet_diam = 20;
+const reload_interval = 2000;
+const max_shots = 3;
 
 
 // local list of players
@@ -36,16 +41,22 @@ let bullets = [];
 class Player{
   // creates new player instance
   constructor(id, name, col, x, y, vel){
+    // identification
     this.id = id;
     this.name = name;
     this.col = col; // color
+
+    // position
     this.x = x;
     this.y = y;
 
-    this.vel = vel;
-    this.hit = false;
-    this.aim = vel;
-  
+    // vectors
+    this.vel = vel;   // velocity
+    this.aim = vel;   // turret aim
+
+    this.hit = false; // player got hit
+
+    this.bullets = [];
   }
 
   // renders the player on the canvas
@@ -58,12 +69,13 @@ class Player{
     } else {
       noStroke();
     }
-    
-    // draw red border if player was hit
+
+
+    // fill('#FF0000');
+    // ellipse(this.x, this.y, hit_radius*2, hit_radius*2);
     
     
     push();
-
     translate(this.x, this.y);
     rotate(-this.vel.heading());
     rectMode(CENTER);
@@ -81,32 +93,36 @@ class Player{
       rect(0, 0, thingyW, thingyH, 5, 5);
     } else {
       fill(this.col);
-      rect(0, 0, thingyW, thingyH, 5, 5);
-      fill('#FFFFFF');        
-    }
-    
+      rect(0, 0, thingyW, thingyH, 5, 5);             
+    }  
+    fill('#FF0000')
+    ellipse(0,0,5,5);
 
     rotate(+this.vel.heading());
     // tank barrel
     rotate(this.aim.heading());
     fill(color(0));
-    rect(10, 0, 30, 10);
-    rotate(-this.aim.heading());
+    rect(20, 0, 30, 6);
+    fill(color(130));
     
+    quad(15, 5, 15, -5, 5, -10, 5, 10);
+    rect(33, 0, 9, 8);
+    rotate(-this.aim.heading());
 
     // tank turret 
+    
     rotate(-this.vel.heading());
     fill(color(100));
     ellipse(0,0, 25, 25);
     fill('#FFFFFF');
     triangle(-3, -4, -3, 4, 5, 0);
-
     
+
     pop();
     
     
-    noStroke();
     // show player name 
+    noStroke();
     textSize(20);
     fill(color(255));
     textAlign(CENTER, BOTTOM);
@@ -115,6 +131,7 @@ class Player{
     
   }
 
+  /*
   // edge helper function
   top() {return this.y - thingyH/2}
   left() {return this.x - thingyW/2}
@@ -129,6 +146,7 @@ class Player{
       return true;
     }
   } 
+  */
 }
 
 
@@ -139,12 +157,18 @@ class Player{
 */
 
 class Bullet {
+
+  
+
   constructor(p, time, vel) {
     this.id = p.id;       // -> ID of player who shot bullet
     this.name = p.name;   // -> name of player who shot bullet
     this.col = p.col;
-    this.x = p.x + 6*vel.x;
-    this.y = p.y + 6*vel.y;
+
+    let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
+
+    this.x = p.x + initial_pos.x;
+    this.y = p.y + initial_pos.y;
     // this.x = p.x;
     // this.y = p.y;
     this.time = time;   // -> time the bullet was shot
@@ -157,22 +181,29 @@ class Bullet {
   colliding(thing){    
     // vector between player and thing
     let dist = createVector(thing.x-this.x, thing.y-this.y);
+    let dist_mag = dist.mag();
 
     // bullet collided with a player
     if (thing instanceof Player) {            
+      /*
       let deltaX = abs(dist.x);
-      let deltaY = abs(dist.y);
-
+      let deltaY = abs(dist.y);      
       if (deltaX < (thingyW + bullet_diam)/2 && deltaY < (thingyH + bullet_diam)/2 ) {      
         return true;      
+      } else {
+        return false;
+      }
+      */
+
+      if (dist_mag < hit_radius+bullet_diam/2) {
+        return true; 
       } else {
         return false;
       }
     }
   
     // bullet collided with another bullet
-    if (thing instanceof Bullet) {
-      let dist_mag = dist.mag();
+    if (thing instanceof Bullet) {      
       if (dist_mag < bullet_diam) {
         return true; 
       } else {
@@ -185,8 +216,7 @@ class Bullet {
   display() {
     // update position
     this.x += this.vel.x;
-    this.y += this.vel.y;
-    
+    this.y += this.vel.y;    
 
     // draw bullet
     fill(this.col);
@@ -285,23 +315,41 @@ for (let i = 0; i < 5; i++) {
 
 
 function shoot() {
+  // do nothing if user is hit
   if (!user.hit) {
     let vel = createVector(mouseX - user.x, mouseY - user.y);
     let velNormal = vel.normalize();
     let velScaled = velNormal.mult(bullet_speed);
 
-    if (bullets.length > 0) {
-      // only add new bullet after [bullet_interval] seconds have passed
-      let last_time = bullets[bullets.length-1].time;
+    if (user.bullets.length > 0) {
+      // only add new bullet after [bullet_interval] milliseconds have passed
+      let last_time = user.bullets[user.bullets.length-1].time;
 
-      if ( Date.now() - last_time > bullet_interval ) {
-        let bullet = new Bullet(user, Date.now(), velScaled);   
-        bullets.push(bullet);
+      // timeout after three shots to "reload"
+      if (user.bullets.length == max_shots) {   
+        console.log('Reloading!')     
+        // do nothing for [reload_timeout] milliseconds
+        if (Date.now() - last_time > reload_interval) {
+          // reset user's bullets
+          user.bullets = [];
+        }        
+        
+      } else {
+
+        if ( Date.now() - last_time > bullet_interval ) {
+          let bullet = new Bullet(user, Date.now(), velScaled);   
+          bullets.push(bullet);
+          user.bullets.push(bullet);
+        }
       }
+
+      // user.bullets[user.bullets.length()-1];
+
 
     } else {
       let bullet = new Bullet(user, Date.now(), velScaled);   
       bullets.push(bullet);
+      user.bullets.push(bullet);
     }
   }
   
@@ -317,48 +365,51 @@ function keys(p) {
   let y = p.y;  
   let angle = p.vel.heading();
 
-
+  // trigerred on key presses
   if (!user.hit) {
     if (keyIsDown(87)) {
-      // w
+      // w -> forward
       moved = true;
       keystrokes += 'w'; 
       x += p.vel.x;
       y -= p.vel.y;
     }
     if (keyIsDown(65)) {
-      // a
+      // a -> turn CCW
       moved = true;
       keystrokes += 'a';
       p.vel.setHeading(angle + 2 * (Math.PI/180));
     }
     if (keyIsDown(83)) {
-      // s
+      // s -> backward
       moved = true;
       keystrokes += 'w'; 
       x -= p.vel.x;
       y += p.vel.y;
     }
     if (keyIsDown(68)) {
-      // d
+      // d -> turn CW
       moved = true;
       keystrokes += 'a';
       p.vel.setHeading(angle - 2 * (Math.PI/180));
     }
     
+    // canvas borders
+    if (x < thingyW/2) {x = thingyW/2;}
+    if (x > canvasW-thingyW/2) {x = canvasW-thingyW/2;}
+    if (y < thingyH/2) {y = thingyH/2;}
+    if (y > canvasH-thingyH/2) {y = canvasH-thingyH/2;}
+
+    // update position
     user.x = x;
     user.y = y;
   }
   
-
-  
-  if (mouseIsPressed){
-    // shoot ball when mouse is pressed    
+  // shoot projectile when mouse is pressed    
+  if (mouseIsPressed){   
     shoot();
   }
 
-  
-  
   return [moved, keystrokes];
 
 }
@@ -389,10 +440,18 @@ function inFront(p1, p2){
 function draw() {
   background(220);
 
+  // get user input
   keys(user); 
-  let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
-  user.aim = aim_vector;
 
+
+  // update barrel angle
+  if (!user.hit) {
+    let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
+    user.aim = aim_vector;
+  }
+  
+  /*
+  // checking for player colisions
   players.forEach(p => {
     if (user.colliding(p)) {
       if (p.id != user.id){
@@ -400,6 +459,7 @@ function draw() {
       }
     } 
   });
+  */
 
   // let render = [];
   
@@ -410,6 +470,7 @@ function draw() {
   // // layering
   // render.sort(inFront);
 
+  // drawing players on screen
   players.sort(inFront);
   players.forEach(p => {
     p.display();    
@@ -424,7 +485,7 @@ function draw() {
     b.display();
   });
 
-  // checking for collisions
+  // checking for bullet collisions
   bullets.forEach(b => {        
 
     let add;
@@ -435,6 +496,7 @@ function draw() {
 
     // bullet X player
     players.forEach(p => {
+      // if (b.colliding(p) && !p.hit){ 
       if (b.colliding(p)){        
 
         if (b.id != p.id) {
