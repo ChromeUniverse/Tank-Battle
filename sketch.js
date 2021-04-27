@@ -16,16 +16,17 @@ const thingyH = 40;
 const hit_radius = 30;
 
 // player speed
-const speedX = 4;
-const speedY = 4;
-const player_speed = 2;
+// const speedX = 4;
+// const speedY = 4;
+const player_speed = 4;
+const rotation_speed = 4;
 
 // bullet parameters
-const bullet_speed = 3;
+const bullet_speed = 7;
 const bullet_interval = 400;
-const bullet_diam = 20;
+const bullet_diam = 15;
 const reload_interval = 2000;
-const max_shots = 3;
+const max_shots = 5;
 
 
 // local list of players
@@ -58,6 +59,7 @@ class Player{
 
     this.bullets = [];
     this.reloading = false;
+    this.cooldown = false;
   }
 
   // renders the player on the canvas
@@ -275,7 +277,7 @@ let maxY = canvasH-thingyH;
 
 const userID = 'Lucca';
 const userName = 'Lucca';
-const userColor = '#123456';
+const userColor = '#2ba9c2';
 
 // let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
 // let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
@@ -313,24 +315,65 @@ for (let i = 0; i < 5; i++) {
 
 */
 
+function draw_cooldown_bar(p) {
+  if (!user.reloading && user.bullets.length != 0) {
+    strokeWeight(2);
+    stroke(color(220));
+    rectMode(CENTER);
+    fill('#ffaa66');
+    rect(p.x, p.y-60, 70, 10);
+
+    let ratio = (Date.now() - user.bullets[user.bullets.length-1].time)/bullet_interval;
+    // console.log(ratio);
+    fill(color(49, 191, 6));
+    rectMode(CORNER);
+    if (ratio <= 1) {  
+      // noStroke();  
+      rect(p.x-35, p.y-65, 70*ratio, 10);  
+    } else {
+      p.cooldown = false;
+    }
+  }
+  
+}
+
 function draw_shots_bar(p) {
-  noStroke()
+  strokeWeight(2);
+  stroke(color(220));
+  rectMode(CENTER);
+  fill('#ffaa66');
+  rect(p.x, p.y-70, 70, 10);
+
+  let ratio = user.bullets.length/max_shots;
+  // console.log(ratio);
+  fill(color(5, 113, 255));
+  rectMode(CORNER);
+  if (ratio <= 1) {  
+    // noStroke();  
+    rect(p.x-35, p.y-75, 70*(1-ratio), 10);  
+  } else {
+    p.reloading = false;
+  }
+
+
 }
 
 function draw_reload_bar(p) {
-  noStroke();
+  strokeWeight(2);
+  stroke(color(220));
   rectMode(CENTER);
   fill('#ffaa66');
-  rect(p.x, p.y-70, 70, 20);
+  rect(p.x, p.y-60, 70, 10);
 
   let ratio = (Date.now() - user.bullets[user.bullets.length-1].time)/reload_interval;
   // console.log(ratio);
   fill('#ff0000');
   rectMode(CORNER);
   if (ratio <= 1) {    
-    rect(p.x-35, p.y-80, 70*ratio, 20);  
+    rect(p.x-35, p.y-65, 70*ratio, 10);  
   } else {
     p.reloading = false;
+    user.bullets = [];
   }
 }
 
@@ -361,9 +404,11 @@ function shoot() {
       } else {
         if ( Date.now() - last_time > bullet_interval ) {
           user.reloading = false;
+          user.cooldown = true;
           let bullet = new Bullet(user, Date.now(), velScaled);   
           bullets.push(bullet);
           user.bullets.push(bullet);
+          
         }
       }
 
@@ -372,6 +417,7 @@ function shoot() {
 
     } else {
       user.reloading = false;
+      user.cooldown = true;
       let bullet = new Bullet(user, Date.now(), velScaled);   
       bullets.push(bullet);
       user.bullets.push(bullet);
@@ -403,7 +449,7 @@ function keys(p) {
       // a -> turn CCW
       moved = true;
       keystrokes += 'a';
-      p.vel.setHeading(angle + 2 * (Math.PI/180));
+      p.vel.setHeading(angle + rotation_speed * (Math.PI/180));
     }
     if (keyIsDown(83)) {
       // s -> backward
@@ -416,7 +462,7 @@ function keys(p) {
       // d -> turn CW
       moved = true;
       keystrokes += 'a';
-      p.vel.setHeading(angle - 2 * (Math.PI/180));
+      p.vel.setHeading(angle - rotation_speed * (Math.PI/180));
     }
     
     // canvas borders
@@ -500,14 +546,7 @@ function draw() {
     p.display();    
   });
 
-  if (user.reloading) {
-    console.log(user.name + ' still reloading');
-    draw_reload_bar(user);
-  } else {
-    console.log(user.name + ' NOT reloading')
-  }
-
-  draw_shots_bar(user);
+  
 
 
   // removing bullets
@@ -517,6 +556,19 @@ function draw() {
   bullets.forEach(b => {    
     b.display();
   });
+
+  
+  // drawing reload bar
+  if (user.reloading) {
+    draw_reload_bar(user);
+  } 
+  if (user.cooldown) {
+    draw_cooldown_bar(user);
+  }
+  // draw bar displaying number of reamining shots
+  draw_shots_bar(user);
+  
+
 
   // checking for bullet collisions
   bullets.forEach(b => {        
@@ -529,8 +581,8 @@ function draw() {
 
     // bullet X player
     players.forEach(p => {
-      // if (b.colliding(p) && !p.hit){ 
-      if (b.colliding(p)){        
+      if (b.colliding(p) && !p.hit){ 
+      // if (b.colliding(p)){        
 
         if (b.id != p.id) {
           console.log(b.name + "'s bullet hit " + p.name);
