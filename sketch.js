@@ -57,6 +57,7 @@ class Player{
     this.hit = false; // player got hit
 
     this.bullets = [];
+    this.reloading = false;
   }
 
   // renders the player on the canvas
@@ -312,6 +313,27 @@ for (let i = 0; i < 5; i++) {
 
 */
 
+function draw_shots_bar(p) {
+  noStroke()
+}
+
+function draw_reload_bar(p) {
+  noStroke();
+  rectMode(CENTER);
+  fill('#ffaa66');
+  rect(p.x, p.y-70, 70, 20);
+
+  let ratio = (Date.now() - user.bullets[user.bullets.length-1].time)/reload_interval;
+  // console.log(ratio);
+  fill('#ff0000');
+  rectMode(CORNER);
+  if (ratio <= 1) {    
+    rect(p.x-35, p.y-80, 70*ratio, 20);  
+  } else {
+    p.reloading = false;
+  }
+}
+
 
 
 function shoot() {
@@ -328,15 +350,17 @@ function shoot() {
       // timeout after three shots to "reload"
       if (user.bullets.length == max_shots) {   
         console.log('Reloading!')     
+        user.reloading = true;
         // do nothing for [reload_timeout] milliseconds
         if (Date.now() - last_time > reload_interval) {
           // reset user's bullets
           user.bullets = [];
+          user.reloading = false;
         }        
         
       } else {
-
         if ( Date.now() - last_time > bullet_interval ) {
+          user.reloading = false;
           let bullet = new Bullet(user, Date.now(), velScaled);   
           bullets.push(bullet);
           user.bullets.push(bullet);
@@ -347,6 +371,7 @@ function shoot() {
 
 
     } else {
+      user.reloading = false;
       let bullet = new Bullet(user, Date.now(), velScaled);   
       bullets.push(bullet);
       user.bullets.push(bullet);
@@ -443,7 +468,6 @@ function draw() {
   // get user input
   keys(user); 
 
-
   // update barrel angle
   if (!user.hit) {
     let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
@@ -475,6 +499,15 @@ function draw() {
   players.forEach(p => {
     p.display();    
   });
+
+  if (user.reloading) {
+    console.log(user.name + ' still reloading');
+    draw_reload_bar(user);
+  } else {
+    console.log(user.name + ' NOT reloading')
+  }
+
+  draw_shots_bar(user);
 
 
   // removing bullets
