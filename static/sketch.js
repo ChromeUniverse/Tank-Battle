@@ -101,13 +101,16 @@ class Player{
 
       // highlight user with a thin dark border
       if (this.id == user.id) {
-        strokeWeight(2);
-        stroke('rgb(38, 38, 61)');        
+        strokeWeight(5);
+        stroke('#2a27b5');            
+        fill(0,0,0,0);
+        ellipse(0, 0, 80, 80);  
       } 
 
-      fill(this.col);
-      rect(0, 0, thingyW, thingyH, 5, 5);                   
       noStroke();
+      fill(this.col);      
+      rect(0, 0, thingyW, thingyH, 5, 5);                   
+      
     }  
     fill('#FF0000')
     ellipse(0,0,5,5);
