@@ -1,0 +1,20 @@
+{
+  "name": "tank_game",
+  "version": "1.0.0",
+  "description": "A simple tank game made with p5.js",
+  "main": "sketch.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChromeUniverse/Tank-Game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ChromeUniverse/Tank-Game/issues"
+  },
+  "homepage": "https://github.com/ChromeUniverse/Tank-Game#readme"
+}
