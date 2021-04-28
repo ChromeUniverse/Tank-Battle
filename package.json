@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/ChromeUniverse/Tank-Game/issues"
   },
-  "homepage": "https://github.com/ChromeUniverse/Tank-Game#readme"
+  "homepage": "https://github.com/ChromeUniverse/Tank-Game#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "pm2": "^4.5.6",
+    "ws": "^7.4.5"
+  }
 }
