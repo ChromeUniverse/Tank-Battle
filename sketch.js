@@ -375,45 +375,6 @@ class Obstacle {
     
   }
 
-  /*
-  colliding(p) {
-    if ( this.top() > p.y + hit_radius || this.right() < p.x - hit_radius || this.bottom() < p.y - hit_radius || this.left() > p.x + hit_radius ) {
-      return false;
-    } else {
-      console.log('Collided!');
-      return true;
-    }
-  } 
-
-  top_col(p) {
-    if ( p.y + hit_radius > this.top() ) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  left_col(p) {
-    if ( p.x + hit_radius < this.left() ) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  bottom_col(p) {
-    if ( p.y - hit_radius < this.bottom() ) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  right_col(p) {
-    if ( p.x - hit_radius > this.right() ) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  */
 }
 
 
@@ -423,9 +384,13 @@ class Obstacle {
 
 /*
 
-**************** User Setup ****************
+**************** Setup ****************
 
 */
+
+
+
+
 
 // set random spawn position within canvas borders
 let minX = hit_radius;
@@ -506,6 +471,10 @@ obstacles.push(box);
 **************** Functions ****************
 
 */
+
+
+
+
 
 function draw_cooldown_bar(p) {
   if (!user.reloading && user.bullets.length != 0) {
@@ -700,11 +669,22 @@ function keys(p) {
 
 }
 
+
+
+
+
+
 /*
 
 **************** Main Program ****************
 
 */
+
+
+
+
+
+
 
 // Main setup function
 function setup() {
@@ -740,18 +720,6 @@ function draw() {
   obstacles.forEach(o => {
     o.display();
   });
-
-  
-  /*
-  // checking for player colisions
-  players.forEach(p => {
-    if (user.colliding(p)) {
-      if (p.id != user.id){
-        console.log(user.name + ' collided with ' + p.name);
-      }
-    } 
-  });
-  */
 
   // let render = [];
   
