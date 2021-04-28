@@ -1,4 +1,4 @@
-# Tank Game
+# Tank Battle!
 
 A simple tank game made with p5.js
 
