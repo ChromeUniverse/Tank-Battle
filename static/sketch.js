@@ -16,8 +16,8 @@ const thingyH = 40;
 const hit_radius = 30;
 
 // player speed
-const player_speed = 4;
-const rotation_speed = 4;
+const player_speed = 3;
+const rotation_speed = 3;
 
 // bullet parameters
 const bullet_speed = 7;
@@ -27,11 +27,17 @@ const reload_interval = 2000;
 const maxBounces = 4;
 const max_shots = 5;
 
+// animation parameters
+const explosion_radius = 100; 
+const explosion_duration = 200;
+const bullet_explosion_radius = 30; 
+const bullet_explosion_duration = 200;
 
-// local list of players
+// containers
 let players = [];
 let bullets = [];
 let obstacles = [];
+let animations = []
 
 /*
 
@@ -64,14 +70,7 @@ class Player{
 
   // renders the player on the canvas
   display() {
-    
-    // highlight user with a thin black border
-    if (this.id == user.id) {
-      strokeWeight(3);
-      stroke('rgb(38, 38, 61)');
-    } else {
-      noStroke();
-    }
+  
 
     /*
     noStroke();
@@ -92,13 +91,23 @@ class Player{
     fill(color(0));
     rect(0, -20, 50, 10, 2, 2);
 
+
+
     // tank body
     if (this.hit) {
-      fill('#FF0000');      
+      fill('#751f05');      
       rect(0, 0, thingyW, thingyH, 5, 5);
     } else {
+
+      // highlight user with a thin dark border
+      if (this.id == user.id) {
+        strokeWeight(2);
+        stroke('rgb(38, 38, 61)');        
+      } 
+
       fill(this.col);
-      rect(0, 0, thingyW, thingyH, 5, 5);             
+      rect(0, 0, thingyW, thingyH, 5, 5);                   
+      noStroke();
     }  
     fill('#FF0000')
     ellipse(0,0,5,5);
@@ -115,10 +124,11 @@ class Player{
     rotate(-this.aim.heading());
 
     // tank turret 
-    
+    strokeWeight(2);
     rotate(-this.vel.heading());
     fill(color(100));
     ellipse(0,0, 25, 25);
+    noStroke();
     fill('#FFFFFF');
     triangle(-3, -4, -3, 4, 5, 0);
     
@@ -131,7 +141,7 @@ class Player{
     textSize(20);
     fill(color(255));
     textAlign(CENTER, BOTTOM);
-    text(this.name, this.x, this.y+thingyH/2+30);  
+    text(this.name, this.x, this.y+thingyH/2+40);  
     
   }
 
@@ -315,6 +325,12 @@ class Bullet {
 */
 
 
+
+
+
+
+
+
 class Obstacle {
   constructor(x, y, w, h, col) {
     this.x = x;
@@ -382,6 +398,56 @@ class Obstacle {
 
 
 
+
+
+
+
+
+
+/*
+
+**************** Animation Class ****************
+
+*/
+
+
+class Animation {
+  constructor(x, y, radius, duration) {
+    this.x = x;                   // coordinates
+    this.y = y;
+    this.radius = radius;
+    this.duration = duration;     // animation duration in milliseconds
+    this.start_time = Date.now();
+  }
+  
+  display() {
+    
+    strokeWeight(5);
+    stroke('#fa7500');
+    fill('#fae100');
+    
+    let ratio = (Date.now()-this.start_time)/this.duration;
+    
+    if (ratio <= 0.5 ) {
+      ellipse(this.x, this.y, this.radius*2*ratio, this.radius*2*ratio); 
+    } else if (ratio > 0.5 && ratio <= 1){
+      rectMode(CENTER);  
+      rect(this.x, this.y, this.radius*2*(1-ratio), this.radius*2*(1-ratio));
+    } 
+    noStroke();
+    
+  }
+
+  
+}
+
+
+
+
+
+
+
+
 /*
 
 **************** Setup ****************
@@ -402,15 +468,11 @@ let startAngle = Math.floor(Math.random() * 360);
 
 // creating user
 
-const userID = 'Lucca';
-const userName = 'Lucca';
-const userColor = '#2ba9c2';
-
 let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
 let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
 let vel_vector = new p5.Vector.fromAngle(startAngle * (Math.PI/180), player_speed);
-let user = new Player(userID, userName, userColor, userX, userY, vel_vector);
+let user = new Player('123412341234', userName, userColor, userX, userY, vel_vector);
 players.push(user);
 
 
@@ -737,7 +799,9 @@ function draw() {
     p.display();    
   });
 
-
+  animations.forEach(a => {
+    a.display();
+  });
 
   // removing bullets
   bullets_copy = [];
@@ -767,7 +831,9 @@ function draw() {
 
     if (b.bounces < maxBounces) {      
       add = true;
-    }  
+    } else {
+      animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
+    }
 
     // bullet X player
     players.forEach(p => {
@@ -777,12 +843,14 @@ function draw() {
         if (b.id != p.id) {
           console.log(b.name + "'s bullet hit " + p.name);
           p.hit = true;
+          animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
           add = false;
         } 
         
         else {
           console.log(b.name + ' is dead!');
           p.hit = true;
+          animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
           add = false;
         }        
 
@@ -795,6 +863,7 @@ function draw() {
         // don't compare bullet with itself        
         if (b.x != b2.x && b.y != b2.y) {
           console.log("Bullets collided!");
+          animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
           add = false;
         }
       }      
@@ -802,7 +871,7 @@ function draw() {
 
     if (add) {
       bullets_copy.push(b); 
-    }
+    } 
 
   });
 
