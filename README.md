@@ -2,7 +2,7 @@
 
 A (soon to be real-time multiplayer) tank combat game made with [p5.js](https://p5js.org/).
 
-This project was made exclusively for educational purposes.
+This project was made solely for educational purposes.
 
 ## Gallery
 
