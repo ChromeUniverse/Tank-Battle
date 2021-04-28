@@ -1,10 +1,21 @@
 # Tank Battle!
 
-A simple tank game made with p5.js
+A (soon to be real-time multiplayer) tank combat game made with [p5.js](https://p5js.org/).
+
+This project was made exclusively for educational purposes.
 
 ## Gallery
 
 ![image](https://media.discordapp.net/attachments/760252264723644426/837088289374732378/unknown.png?width=1271&height=632)
+
+
+## At a glimpse
+
+_Coming soon_
+
+## Usage
+
+_Coming soon_
 
 ## Progress
 
