@@ -8,11 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="empty.css">
   <title>Tank Battle!</title>
 </head>
 <body>
   <p class="header"><b>Tank Battle!</b></p>
+
+  <!-- <p class="alert">Username or room name empty. Please try again.</p> -->
+  <p class="alert">Username empty. Please try again.</p>
 
   <div class="stuff">
     <form action="/" method="POST">
@@ -21,13 +24,6 @@
         <label class="label" for="username">Username</label> 
         <input class="input" type="text" name="username" id=""> 
       </div>
-      
-      <!-- 
-      <div class="line">
-        <label class="label" for="room">Room</label>
-        <input class="input" type="text" name="room" id="">
-      </div>
-       -->
       
       <div class="send-button">
         <button type="submit">Join Room</button>
