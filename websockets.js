@@ -14,20 +14,16 @@ let rooms = {};
 // connection pool
 let sockets = {}
 
-// tank dimensions
-const tankW = 40;
-const tankH = 40;
-
-// player speed
-const speedX = 5;
-const speedY = 5;
 
 // canvas properties
 const canvasW = 1200; 
 const canvasH = 600;
 
+const speedX = 5;
+const speedY = 5;
+
 // tank dimensions
-const tankW = 60;
+const tankW = 40;
 const tankH = 40;
 
 // player hit-circle
@@ -60,7 +56,7 @@ const bullet_explosion_duration = 200;
 
 class Player{
   // creates new player instance
-  constructor(id, name, col, x, y, vel){
+  constructor(id, name, col, x, y, vel_angle){
     // identification
     this.id = id;
     this.name = name;
@@ -71,8 +67,8 @@ class Player{
     this.y = y;
 
     // vectors
-    this.vel = vel;   // velocity
-    this.aim = vel;   // turret aim
+    this.vel_angle = vel_angle;   // velocity
+    this.aim_angle = vel_angle;   // turret aim
 
     this.hit = false; // player got hit
 
@@ -87,12 +83,22 @@ class Player{
     if (thing instanceof Player) {
 
       // vector between both players
-      let dist = createVector(thing.x-this.x, thing.y-this.y);
-      let dist_mag = dist.mag();
+      // let dist = createVector(thing.x-this.x, thing.y-this.y);
+      // let dist_mag = dist.mag();
+      distX = thing.x-this.x;
+      distY = thing.y-this.y;
+      let dist_mag = Math.hypot(distX, distY);
 
       if (dist_mag < hit_radius*2) {
-        let normal = dist.normalize().mult(hit_radius*2-dist_mag);
-        return [normal.x, normal.y];
+        // let normal = dist.normalize().mult(hit_radius*2-dist_mag);
+        // return [normal.x, normal.y];
+
+        // take X and Y components of the normal vector, normalize and multiply by overlap
+
+        let normalX = distX / dist_mag * (hit_radius*2-dist_mag);
+        let normalY = distY / dist_mag * (hit_radius*2-dist_mag);
+        return [normalX, normalY];
+
       } else {
         return false;
       }
@@ -102,6 +108,198 @@ class Player{
 
   } 
   
+}
+
+// check for collision with other players
+function collide_pXp(p1, p2) {
+
+  // vector between both players
+  // let dist = createVector(thing.x-this.x, thing.y-this.y);
+  // let dist_mag = dist.mag();
+  distX = p1.x-p2.x;
+  distY = p1.y-p2.y;
+  let dist_mag = Math.hypot(distX, distY);
+
+  if (dist_mag < hit_radius*2) {
+    // let normal = dist.normalize().mult(hit_radius*2-dist_mag);
+    // return [normal.x, normal.y];
+
+    // take X and Y components of the normal vector, normalize and multiply by overlap
+
+    let normalX = distX / dist_mag * (hit_radius*2-dist_mag);
+    let normalY = distY / dist_mag * (hit_radius*2-dist_mag);
+    return [normalX, normalY];
+
+  } else {
+    return false;
+  }
+
+} 
+
+
+
+/*
+
+**************** Bullet Class ****************
+
+*/
+
+class Bullet {
+
+  constructor(p, time, vel) {
+    this.id = p.id;       // -> ID of player who shot bullet
+    this.name = p.name;   // -> name of player who shot bullet
+    this.col = p.col;
+
+    let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
+
+    this.x = p.x + initial_pos.x;
+    this.y = p.y + initial_pos.y;
+    // this.x = p.x;
+    // this.y = p.y;
+    this.time = time;   // -> time the bullet was shot
+    this.vel = vel;     // -> velocity vector
+    this.bounces = 0;    
+    
+  }
+
+  // check for collisions
+
+  colliding(thing){    
+
+    // vector between bullet and thing
+    let dist = createVector(thing.x-this.x, thing.y-this.y);
+    let dist_mag = dist.mag();
+
+
+    // bullet X player collision
+    if (thing instanceof Player) {           
+
+      if (dist_mag < hit_radius+bullet_diam/2) {
+        return true; 
+      } else {
+        return false;
+      }
+    }
+  
+
+    // bullet X bullet collision
+    if (thing instanceof Bullet) {      
+      if (dist_mag < bullet_diam) {
+        return true; 
+      } else {
+        return false;
+      }
+    } 
+
+
+    // obstacle X bullet collision
+    if (thing instanceof Obstacle ) {
+
+      // get point at box nearest to bullet
+
+      // clamping bullet X coord to obstacle borders
+      let pointX = this.x;
+      pointX = min( pointX, thing.right() );
+      pointX = max( pointX, thing.left() );
+
+      // clamping player Y coord to obstacle borders
+      let pointY = this.y;
+      pointY = min( pointY, thing.bottom() );
+      pointY = max( pointY, thing.top() );
+
+      /*
+      noStroke();
+      fill('#0000ff');
+      ellipse(pointX, pointY, 5, 5);
+      */
+
+      // vector from nearest point to bullet 
+      let dist = new p5.Vector(this.x - pointX, this.y - pointY);
+      let dist_mag = dist.mag();
+
+      if (dist_mag < bullet_diam/2) {
+
+        // get normal vector
+        let normal = dist.normalize().mult(bullet_diam/2-dist_mag);
+
+        // reflect velocity vector and bounce
+        this.vel = this.vel.reflect(normal);
+        this.bounces += 1;
+
+        return [normal.x, normal.y];
+
+      } else {
+        return false;
+      }
+    
+    }
+    
+  }
+
+}
+
+
+
+/*
+
+**************** Obstacle Class ****************
+
+*/
+
+
+
+class Obstacle {
+  constructor(x, y, w, h, col) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.col = col;
+  }
+
+  // get edges
+  top() {return this.y}
+  left() {return this.x}
+  bottom() {return this.y + this.h;}
+  right() {return this.x + this.w;}
+
+  colliding(thing) {
+    // obstacle X player collision
+    if (thing instanceof Player) {
+      // get point at rectangle nearest to player
+
+      // clamping player X coord to obstacle borders
+      let pointX = thing.x;
+      pointX = min( pointX, this.right() );
+      pointX = max( pointX, this.left() );
+
+      // clamping player Y coord to obstacle borders
+      let pointY = thing.y;
+      pointY = min( pointY, this.bottom() );
+      pointY = max( pointY, this.top() );
+
+      /*
+      noStroke();
+      fill('#ff0000');
+      ellipse(pointX, pointY, 5, 5);
+      */
+
+      // vector from nearest point to player
+      let dist = new p5.Vector(thing.x - pointX, thing.y - pointY);
+      let dist_mag = dist.mag();
+
+      if (dist_mag < hit_radius) {
+        let normal = dist.normalize().mult(hit_radius-dist_mag);
+        return [normal.x, normal.y];
+      } else {
+        return false;
+      }
+
+    } 
+    
+  }
+
 }
 
 
@@ -155,6 +353,7 @@ wss.on("connection",
         let newPlayerColor = dataJson['color'];
         let newPlayerX = dataJson['x'];
         let newPlayerY = dataJson['y'];
+        let newPlayerAngle = dataJson['angle'];
         // let roomName = dataJson['room'];        
         let roomName = 'testroom';
 
@@ -165,6 +364,7 @@ wss.on("connection",
           color: newPlayerColor.toString(),
           x: newPlayerX,
           y: newPlayerY,
+          angle: newPlayerAngle,
           room: roomName,          
         }
 
@@ -195,6 +395,7 @@ wss.on("connection",
                 color: newPlayerColor.toString(),
                 x: newPlayerX,
                 y: newPlayerY,  
+                angle: newPlayerAngle
               }
             )
             // send JSON
@@ -219,28 +420,47 @@ wss.on("connection",
           let p = room[ID];
           let x = p['x'];
           let y = p['y'];
+          let angle = p['angle'];
 
           // check keystrokes
           if (keystrokes.includes('w')) {            
-            y -= speedY; 
-            if (y < tankH/2) { y = tankH/2; }
+            x += player_speed * Math.sin(angle);
+            y -= player_speed * Math.cos(angle);
           }
-          if (keystrokes.includes('a')) {
-            x -= speedX; 
-            if (x < tankW/2) { x = tankW/2; }                        
+          if (keystrokes.includes('a')) {   
+            angle -= rotation_speed * (Math.PI/180);                   
           }
           if (keystrokes.includes('s')) {
-            y += speedY; 
-            if (y > canvasH-tankH/2) { y = canvasH-tankH/2; }
+            x -= player_speed * Math.sin(angle);
+            y += player_speed * Math.cos(angle);
           }
           if (keystrokes.includes('d')) {
-             x += speedX; 
-             if (x > canvasW-tankW/2) { x = canvasW-tankW/2; }
+            angle += rotation_speed * (Math.PI/180);
           }
+
+          // clamping x and y to canvas borders
+          x = Math.max(x, hit_radius);
+          x = Math.min(x, canvasW-hit_radius);
+          y = Math.max(y, hit_radius);
+          y = Math.min(y, canvasH-hit_radius);                
+
+          Object.values(room).forEach(p2 => {
+            if (p2.id != p.id) {
+              // let result = p.colliding(p2);
+              let result = collide_pXp(p, p2);
+              if (result != false && !p.hit){
+                // console.log('Players ' + p.name + ' and ' + p2.name + 'collided!');
+                x += result[0];
+                y += result[1];
+              }
+            }
+          });
 
           // update position
           p['x'] = x;
-          p['y'] = y;        
+          p['y'] = y;
+          p['angle'] = angle;
+                  
         }
              
       }      
@@ -370,6 +590,7 @@ function getRoom(roomName) {
       color: p['color'],
       x: p['x'],  
       y: p['y'],
+      angle: p['angle']
     }
     room_to_send[p['id']] = player_to_send;
   });
@@ -379,7 +600,9 @@ function getRoom(roomName) {
 
 
 // send room state to all clients every [interval] milliseconds
-var interval1 = 10;
+var update_rate = 50
+
+var interval1 = 1000/update_rate;
 setInterval(() => {
 
   // iterating through rooms
