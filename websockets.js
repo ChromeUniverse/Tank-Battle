@@ -111,7 +111,7 @@ class Player{
 }
 
 // check for collision with other players
-function collide_pXp(p1, p2) {
+function collide_PXP(p1, p2) {
 
   // vector between both players
   // let dist = createVector(thing.x-this.x, thing.y-this.y);
@@ -134,7 +134,15 @@ function collide_pXp(p1, p2) {
     return false;
   }
 
-} 
+}
+
+function collide_PXO(p, o) {}
+
+function collide_BXB(b1, b2) {}
+
+function collide_PXB(p, b) {}
+
+function collide_BXO(b, o) {}
 
 
 
@@ -446,10 +454,10 @@ wss.on("connection",
 
           Object.values(room).forEach(p2 => {
             if (p2.id != p.id) {
-              // let result = p.colliding(p2);
-              let result = collide_pXp(p, p2);
+              // check for coliison between p and p2
+              let result = collide_PXP(p, p2);
               if (result != false && !p.hit){
-                // console.log('Players ' + p.name + ' and ' + p2.name + 'collided!');
+                // adjust p's coords
                 x += result[0];
                 y += result[1];
               }
@@ -600,7 +608,7 @@ function getRoom(roomName) {
 
 
 // send room state to all clients every [interval] milliseconds
-var update_rate = 50
+var update_rate = 100;
 
 var interval1 = 1000/update_rate;
 setInterval(() => {
