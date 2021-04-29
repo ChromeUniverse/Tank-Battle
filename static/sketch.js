@@ -8,9 +8,9 @@
 const canvasW = 1200; 
 const canvasH = 600;
 
-// thingy dimensions
-const thingyW = 60;
-const thingyH = 40;
+// tank dimensions
+const tankW = 60;
+const tankH = 40;
 
 // player hit-circle
 const hit_radius = 30;
@@ -33,11 +33,21 @@ const explosion_duration = 200;
 const bullet_explosion_radius = 30; 
 const bullet_explosion_duration = 200;
 
+
+// websockets server address
+const server = 'localhost';
+// const server = '192.168.1.109'
+// const server = '34.200.98.64';
+// const server = '18.229.74.58';
+
+
 // containers
-let players = [];
+let players = {};
 let bullets = [];
 let obstacles = [];
-let animations = []
+// let animations = []
+
+const roomName = 'testroom';
 
 
 
@@ -66,7 +76,6 @@ let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
 let vel_vector = new p5.Vector.fromAngle(startAngle * (Math.PI/180), player_speed);
 let user = new Player('123412341234', userName, userColor, userX, userY, vel_vector);
-players.push(user);
 
 
 // creating targets
@@ -76,6 +85,7 @@ let targetID = 'qrno'
 let targetName = 'qrno';
 let targetColor = '#f28500';
 
+/*
 let target = new Player(targetID, targetName, targetColor, 100, 100, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
 players.push(target);
 target = new Player(targetID, targetName, targetColor, 100, 400, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
@@ -88,6 +98,7 @@ target = new Player(targetID, targetName, targetColor, 700, 500, p5.Vector.fromA
 players.push(target);
 target = new Player(targetID, targetName, targetColor, 1100, 300, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
 players.push(target);
+*/
 
 // creating obstacles
 
@@ -118,6 +129,183 @@ obstacles.push(box);
 
 
 
+/*
+
+**************** Websockets ****************
+
+*/
+
+
+
+// new websocket connection
+
+const ws = new WebSocket('ws://' + server + ':2848');
+
+// on connection
+ws.addEventListener("open", () => {
+  console.log("Connected to WS Server");  
+});
+
+
+ws.addEventListener("message", msg => {
+  var dataJson = JSON.parse(msg.data);
+  var dataType = dataJson['type'];
+
+  // set user's unique ID
+  if (dataType == 'set-id'){
+    let ID = dataJson['id'];
+    user.id = ID;
+    // send login data
+    send_login();
+  }
+
+
+  // set room
+  if (dataType == 'set-room'){
+    if (dataJson['room-state'].length != 0) {
+      // looping through players in room state
+      Object.values(dataJson['room-state']).forEach(p=>{
+        let ID = p['id'];
+        // create new players and add them to list
+        newPlayer = new Player(
+          p['id'], 
+          p['name'], 
+          p['color'], 
+          p['x'], 
+          p['y'],
+          p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed)
+        );
+        players[ID] = newPlayer;
+      });
+    } else {
+      console.log('room is empty');
+    }
+  }
+
+  // update room state
+  if (dataType == 'room-update'){
+
+    let room = dataJson['room-state'];
+
+    // looping over entries 
+    Object.values(room).forEach(entry => {
+      let player_id = entry['id'];
+
+      if ( players.hasOwnProperty(player_id)) {
+        // update player attributes on local player list
+        let player = players[player_id];
+        player.x = entry['x'];
+        player.y = entry['y'];
+      }
+
+    });
+  }
+
+  if (dataType == 'new-player') {new_player(dataJson);}
+
+  if (dataType == 'delete-player') {delete_player(dataJson);}
+
+});
+
+
+
+
+
+
+
+
+/*
+
+**************** WS Functions ****************
+
+*/
+
+
+
+
+
+// send login data
+function send_login() {
+  ws.send(
+    JSON.stringify(
+      {
+        type: 'login',
+        id: user.id,
+        name: user.name,
+        color: user.col,
+        x: user.x,
+        y: user.y,
+        room: roomName
+      }
+    )
+  );
+}
+
+
+
+// change user position based on keypresses
+function keys() {
+
+  let moved = false;
+
+  let keystrokes = '';
+  
+  // w
+  if (keyIsDown(87)) {
+    moved = true;
+    keystrokes += 'w';    
+  }
+  // a
+  if (keyIsDown(65)) {
+    moved = true;
+    keystrokes += 'a';
+  }
+  // s
+  if (keyIsDown(83)) {
+    moved = true;
+    keystrokes += 's';
+  }
+  // d
+  if (keyIsDown(68)) {
+    moved = true;
+    keystrokes += 'd';
+  }
+  
+  /*
+  if (keyIsDown(13)){
+    // send chat when Enter is pressed    
+    sendChat();
+  }
+  */
+  
+  
+  return [ moved, keystrokes ];
+}
+
+// sends current position 
+function sendKeys() {
+
+  let data = keys();
+  let moved = data[0];
+  let keystrokes = data[1];
+
+  if (moved) {
+    
+    ws.send(
+      JSON.stringify(
+        {
+          type: 'move',
+          id: user.id, 
+          name: user.name,
+          keys: keystrokes,
+          room: roomName
+        }
+      )
+    );
+
+  }
+
+}
 
 
 
@@ -149,7 +337,8 @@ function draw() {
   background(220);
 
   // get user input
-  input(user); 
+  // input(user); 
+  sendKeys();
 
   // disable barrel aim if user is hit
   if (!user.hit) {
@@ -158,30 +347,36 @@ function draw() {
     user.aim = aim_vector;
   }
 
-
   obstacles.forEach(o => {
     o.display();
   });
 
-  // let render = [];
+  let render = [];
   
-  // Object.values(players).forEach(p => {
-  //   render.push(p);
-  // });
+  Object.values(players).forEach(p => {
+    render.push(p);
+  });
 
-  // // layering
-  // render.sort(inFront);
+  // layering
+  render.sort(inFront);
+
+  render.forEach(p => {
+    p.display();
+  })
 
   // drawing players on screen
 
-  players.sort(inFront);
-  players.forEach(p => {
-    p.display();    
-  });
+  
+  // players.sort(inFront);
+  // players.forEach(p => {
+  //   p.display();    
+  // });
 
+  /*
   animations.forEach(a => {
     a.display();
   });
+  */
 
   // removing bullets
   bullets_copy = [];
@@ -191,19 +386,6 @@ function draw() {
     b.display();
   });
 
-  
-  // drawing reload bar
-  if (user.reloading) {
-    draw_reload_bar(user);
-  } 
-  if (user.cooldown) {
-    draw_cooldown_bar(user);
-  }
-  // draw bar displaying number of reamining shots
-  draw_shots_bar(user);
-  
-
-
   // checking for bullet collisions
   bullets.forEach(b => {        
 
@@ -212,7 +394,7 @@ function draw() {
     if (b.bounces < maxBounces) {      
       add = true;
     } else {
-      animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
+      // animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
     }
 
     // bullet X player
@@ -223,14 +405,14 @@ function draw() {
         if (b.id != p.id) {
           console.log(b.name + "'s bullet hit " + p.name);
           p.hit = true;
-          animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
+          // animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
           add = false;
         } 
         
         else {
           console.log(b.name + ' is dead!');
           p.hit = true;
-          animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
+          // animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
           add = false;
         }        
 
@@ -243,7 +425,7 @@ function draw() {
         // don't compare bullet with itself        
         if (b.x != b2.x && b.y != b2.y) {
           console.log("Bullets collided!");
-          animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
+          // animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
           add = false;
         }
       }      
