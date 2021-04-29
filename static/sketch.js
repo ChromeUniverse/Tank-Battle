@@ -36,7 +36,7 @@ const bullet_explosion_duration = 200;
 
 // websockets server address
 const server = 'localhost';
-// const server = '192.168.1.109'
+// const server = '192.168.1.109';
 // const server = '34.200.98.64';
 // const server = '18.229.74.58';
 
@@ -66,7 +66,9 @@ let minX = hit_radius;
 let maxX = canvasW-hit_radius;
 let minY = hit_radius;
 let maxY = canvasH-hit_radius;
-let startAngle = Math.floor(Math.random() * 360);
+// let startAngle = Math.floor(Math.random() * 360);
+// let startAngle = 90;
+// console.log(startAngle);
 
 
 // creating user
@@ -74,8 +76,9 @@ let startAngle = Math.floor(Math.random() * 360);
 let userX = Math.floor(Math.random() * (maxX-minX) ) + minX;
 let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
-let vel_vector = new p5.Vector.fromAngle(startAngle * (Math.PI/180), player_speed);
-let user = new Player('123412341234', userName, userColor, userX, userY, vel_vector);
+let vel_vector = new p5.Vector.fromAngle(0, player_speed);
+console.log(vel_vector.heading() / (Math.PI/180));
+let user = new Player('', userName, userColor, userX, userY, vel_vector);
 
 
 // creating targets
@@ -173,7 +176,7 @@ ws.addEventListener("message", msg => {
           p['color'], 
           p['x'], 
           p['y'],
-          p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed)
+          p5.Vector.fromAngle(p['angle'], player_speed)
         );
         players[ID] = newPlayer;
       });
@@ -196,6 +199,7 @@ ws.addEventListener("message", msg => {
         let player = players[player_id];
         player.x = entry['x'];
         player.y = entry['y'];
+        player.vel.setHeading(-entry['angle']);
       }
 
     });
@@ -235,6 +239,7 @@ function send_login() {
         color: user.col,
         x: user.x,
         y: user.y,
+        angle: user.vel.heading(),
         room: roomName
       }
     )
@@ -270,13 +275,6 @@ function keys() {
     moved = true;
     keystrokes += 'd';
   }
-  
-  /*
-  if (keyIsDown(13)){
-    // send chat when Enter is pressed    
-    sendChat();
-  }
-  */
   
   
   return [ moved, keystrokes ];

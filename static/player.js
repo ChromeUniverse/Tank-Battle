@@ -40,7 +40,7 @@ class Player{
     
     push();
     translate(this.x, this.y);
-    rotate(-this.vel.heading());
+    rotate(-this.vel.heading()-Math.PI/2);
     rectMode(CENTER);
 
     // tank treads
@@ -76,14 +76,14 @@ class Player{
 
     rotate(+this.vel.heading());
     // tank barrel
-    rotate(this.aim.heading());
+    rotate(-this.aim.heading());
     fill(color(0));
     rect(20, 0, 30, 6);
     fill(color(130));
     
     quad(15, 5, 15, -5, 5, -10, 5, 10);
     rect(33, 0, 9, 8);
-    rotate(-this.aim.heading());
+    rotate(+this.aim.heading());
 
     // tank turret 
     strokeWeight(2);
