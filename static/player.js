@@ -55,7 +55,7 @@ class Player{
     // tank body
     if (this.hit) {
       fill('#751f05');      
-      rect(0, 0, thingyW, thingyH, 5, 5);
+      rect(0, 0, tankW, tankH, 5, 5);
     } else {
 
       // highlight user with a thin dark border
@@ -68,7 +68,7 @@ class Player{
 
       noStroke();
       fill(this.col);      
-      rect(0, 0, thingyW, thingyH, 5, 5);                   
+      rect(0, 0, tankW, tankH, 5, 5);                   
       
     }  
     fill('#FF0000')
@@ -103,7 +103,22 @@ class Player{
     textSize(20);
     fill(color(255));
     textAlign(CENTER, BOTTOM);
-    text(this.name, this.x, this.y+thingyH/2+40);  
+    text(this.name, this.x, this.y+tankH/2+40);  
+
+
+    if (this.id == user.id) {
+      // drawing reload bar
+      if (this.reloading) {
+        draw_reload_bar(this);
+      } 
+      if (this.cooldown) {
+        draw_cooldown_bar(this);
+      }
+      // draw bar displaying number of reamining shots
+      draw_shots_bar(this);
+    }
+
+    
     
   }
 
