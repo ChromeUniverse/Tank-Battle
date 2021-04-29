@@ -237,25 +237,29 @@ function keys() {
 
   let keystrokes = '';
   
-  // w
-  if (keyIsDown(87)) {
+  // w or up 
+  if (keyIsDown(87) || keyIsDown(UP_ARROW)) {
     moved = true;
     keystrokes += 'w';    
   }
-  // a
-  if (keyIsDown(65)) {
+  // a or left
+  if (keyIsDown(65) || keyIsDown(LEFT_ARROW)) {
     moved = true;
     keystrokes += 'a';
   }
-  // s
-  if (keyIsDown(83)) {
+  // s or down
+  if (keyIsDown(83) || keyIsDown(DOWN_ARROW)) {
     moved = true;
     keystrokes += 's';
-  }
-  // d
-  if (keyIsDown(68)) {
+  } 
+  // d or right
+  if (keyIsDown(68) || keyIsDown(RIGHT_ARROW)) {
     moved = true;
     keystrokes += 'd';
+  }
+  // mouse click or enter
+  if (mouseIsPressed || keyIsDown(13)) {
+    
   }
   
   
