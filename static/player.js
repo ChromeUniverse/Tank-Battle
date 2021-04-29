@@ -74,20 +74,20 @@ class Player{
     fill('#FF0000')
     ellipse(0,0,5,5);
 
-    rotate(+this.vel.heading());
+    rotate(+this.vel.heading()+Math.PI/2);
     // tank barrel
-    rotate(-this.aim.heading());
+    rotate(+this.aim.heading());
     fill(color(0));
     rect(20, 0, 30, 6);
     fill(color(130));
     
     quad(15, 5, 15, -5, 5, -10, 5, 10);
     rect(33, 0, 9, 8);
-    rotate(+this.aim.heading());
+    rotate(-this.aim.heading());
 
     // tank turret 
     strokeWeight(2);
-    rotate(-this.vel.heading());
+    rotate(-this.vel.heading()-Math.PI/2);
     fill(color(100));
     ellipse(0,0, 25, 25);
     noStroke();

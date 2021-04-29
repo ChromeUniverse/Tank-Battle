@@ -35,8 +35,8 @@ const bullet_explosion_duration = 200;
 
 
 // websockets server address
-const server = 'localhost';
-// const server = '192.168.1.109';
+// const server = 'localhost';
+const server = '192.168.1.109';
 // const server = '34.200.98.64';
 // const server = '18.229.74.58';
 
@@ -66,9 +66,6 @@ let minX = hit_radius;
 let maxX = canvasW-hit_radius;
 let minY = hit_radius;
 let maxY = canvasH-hit_radius;
-// let startAngle = Math.floor(Math.random() * 360);
-// let startAngle = 90;
-// console.log(startAngle);
 
 
 // creating user
@@ -87,21 +84,6 @@ let user = new Player('', userName, userColor, userX, userY, vel_vector);
 let targetID = 'qrno'
 let targetName = 'qrno';
 let targetColor = '#f28500';
-
-/*
-let target = new Player(targetID, targetName, targetColor, 100, 100, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-target = new Player(targetID, targetName, targetColor, 100, 400, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-target = new Player(targetID, targetName, targetColor, 500, 350, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-target = new Player(targetID, targetName, targetColor, 800, 120, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-target = new Player(targetID, targetName, targetColor, 700, 500, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-target = new Player(targetID, targetName, targetColor, 1100, 300, p5.Vector.fromAngle(Math.floor(Math.random() * 360) * (Math.PI/180), player_speed));
-players.push(target);
-*/
 
 // creating obstacles
 
@@ -339,11 +321,12 @@ function draw() {
   sendKeys();
 
   // disable barrel aim if user is hit
-  if (!user.hit) {
-    // update barrel angle
-    let aim_vector = createVector(mouseX-user.x, mouseY-user.y);
-    user.aim = aim_vector;
-  }
+  Object.values(players).forEach(p => {
+    if (p.id == user.id) {
+      let aim_vector = createVector(mouseX-p.x, mouseY-p.y);
+      p.aim = aim_vector;
+    }
+  });
 
   obstacles.forEach(o => {
     o.display();
