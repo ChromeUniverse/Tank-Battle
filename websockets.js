@@ -7,13 +7,11 @@ let portNumber = 2848;
 const wss = new WebSocket.Server({ port : portNumber });
 console.log("\n[ START ]".green,`[ Websockets server started on port ${portNumber}]\n`);
 
-
-// stores all active rooms
-let rooms = {}; 
-
-// connection pool
-let sockets = {}
-
+// containers
+let sockets = {};       // websockets
+let rooms = {};         // rooms, room state and player data
+let bullets = {};       // rooms and bullets
+let obstacles = {};     // rooms and obstacles
 
 // canvas properties
 const canvasW = 1200; 
@@ -138,7 +136,16 @@ function collide_PXP(p1, p2) {
 
 function collide_PXO(p, o) {}
 
-function collide_BXB(b1, b2) {}
+function collide_BXB(b1, b2) {
+  // calculate distance between bullets 
+  let dist = Math.hypot(b1.x-b2.x, b1.y-b2.y);
+
+  if (dist < bullet_diam) {
+    return true; 
+  } else {
+    return false;
+  }  
+}
 
 function collide_PXB(p, b) {}
 
@@ -352,7 +359,7 @@ wss.on("connection",
       let dataJson = JSON.parse(data);
       let dataType = dataJson["type"];
       
-      // trigerred on every new login event
+      // trigerred on every new login message
       if (dataType == "login") {
         
         // get new player data
@@ -385,9 +392,19 @@ wss.on("connection",
           console.log('[ NEW ROOM ]'.cyan, '[ Creating room:', roomName.cyan, ']\n');
           rooms[roomName] = {};          
         } 
-        
+
         let room = rooms[roomName];
         room[newPlayerID] = newPlayerEntry;
+
+        // creating new bullet container/array if it doesn't already exist
+        if (!bullets.hasOwnProperty(roomName)){
+          console.log('[ NEW BULLET LIST ]'.cyan, '[ In room:', roomName.cyan, ']\n');
+          bullets[roomName] = {};          
+        } 
+
+        let bullet_list = bullets[roomName];
+        bullet_list[newPlayerID] = [];
+        
         
         console.log("[ ONLINE PLAYER LIST ]".magenta, "\n", rooms, '\n');
 
@@ -415,7 +432,7 @@ wss.on("connection",
         send_set_room(newPlayerID, roomName);        
       }  
       
-      // triggered on every new 'move' event
+      // triggered on every new 'move' message
       if (dataType == "move") {                    
         // find who sent the 'move' update        
         let ID = dataJson['id'];    
@@ -471,7 +488,49 @@ wss.on("connection",
                   
         }
              
-      }      
+      }     
+      
+      // trigeered on every new 'shoot' message
+      if (dataType == 'shoot') {
+        // console.log('somebody shot');
+
+        // find who sent the 'move' update        
+        let ID = dataJson['id'];    
+        let roomName = dataJson['room'];
+        // get room's player list
+        let room = rooms[roomName];
+        // get room's bullet list
+        let bullet_list = bullets[roomName];
+
+        let aim = dataJson['aim'];
+
+        // find player who shot the bullet
+        let p = room[ID];
+
+        // let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
+        bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
+        bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
+        // console.log('\nNew bullet position:' + bulletX + ' ' + bulletY + '\n');
+        
+        // adding new bullet to room
+
+        let newBullet = {          
+          id: ID.toString(),
+          name: dataJson['name'].toString(),
+          color: dataJson['color'].toString(),
+          x: bulletX,
+          y: bulletY,  
+          time: Date.now(),
+          aim: aim,
+          bounces: 0,
+        };
+        // console.log(newBullet);
+
+        bullet_list[ID].push(newBullet);
+        // console.log(bullets);
+          
+        
+      }
 
 		});
 
@@ -607,8 +666,94 @@ function getRoom(roomName) {
 }
 
 
+
+function run_bullet_physics(room_bullets){
+  Object.keys(room_bullets).forEach(id => {
+
+    let list = room_bullets[id];
+    let new_list = [];
+    list.forEach(b => {
+
+      let add = true;
+
+      // updating position based on velocity vector angle    
+      b.x = b['x'] + (bullet_speed) * Math.sin(b['aim'] + Math.PI/2);
+      b.y = b['y'] - (bullet_speed) * Math.cos(b['aim'] + Math.PI/2);
+
+      // reflecting velocity vector angle on bounce
+
+      // top and bottom edges
+      if (b.y <= bullet_diam/2 || b.y >= canvasH-bullet_diam/2) {      
+        b.aim = 2*Math.PI - b.aim;        
+        b.bounces += 1;                
+      }
+      // left and right edges
+      if (b.x <= bullet_diam/2 || b.x >= canvasW-bullet_diam/2) {
+        b.aim = Math.PI - b.aim; 
+        b.bounces += 1;          
+      }            
+
+      // removing bullets
+
+      if (b.bounces == maxBounces) {add = false;}
+
+      // bullet X bullet collision
+      list.forEach(b2 => {
+        if (collide_BXB(b, b2)){
+          // don't compare bullet with itself        
+          if (b['x'] != b2['x'] && b['y'] != b2['y']) {       
+            add = false;
+          }
+        }  
+      });
+        
+
+      if (add) {new_list.push(b);}
+      
+    });    
+    room_bullets[id] = new_list;
+  });
+
+  return room_bullets;
+}
+
+
+
+function getBullets(roomName) {
+  let room_bullets = bullets[roomName];
+  // console.log(bullets)
+
+  room_bullets = run_bullet_physics(room_bullets);
+
+  // creating player list to send to clients
+  let bullets_to_send = {};
+
+  Object.keys(room_bullets).forEach(id => {
+
+    let list = room_bullets[id];
+    let list_to_send = [];
+
+    list.forEach(b => {
+      let b_to_send = {
+        id: b['id'],   
+        name: b['name'],
+        color: b['color'],
+        x: b['x'],  
+        y: b['y']
+      }
+
+      list_to_send.push(b_to_send); 
+    });
+
+    
+    bullets_to_send[id] = list_to_send;
+  });
+
+  return bullets_to_send;
+}
+
 // send room state to all clients every [interval] milliseconds
-var update_rate = 100;
+var update_rate = 50;
 
 var interval1 = 1000/update_rate;
 setInterval(() => {
@@ -622,7 +767,12 @@ setInterval(() => {
     Object.keys(room).forEach(id => {
 
       // get room state
-      let room_state = getRoom(roomName);
+      // let room_state = getRoom(roomName);      
+
+      let room_state = {
+        'players': getRoom(roomName),
+        'bullets': getBullets(roomName)
+      };
 
       // need to check if connection is still open
       if (sockets.hasOwnProperty(id)){

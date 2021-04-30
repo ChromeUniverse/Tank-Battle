@@ -43,7 +43,7 @@ const server = '192.168.1.109';
 
 // containers
 let players = {};
-let bullets = [];
+let bullets = {};
 let obstacles = [];
 // let animations = []
 
@@ -177,7 +177,7 @@ ws.addEventListener("message", msg => {
   // update room state
   if (dataType == 'room-update'){
 
-    let room = dataJson['room-state'];
+    let room = dataJson['room-state']['players'];
 
     // looping over entries 
     Object.values(room).forEach(entry => {
@@ -190,8 +190,12 @@ ws.addEventListener("message", msg => {
         player.y = entry['y'];
         player.vel.setHeading(-entry['angle']);
       }
-
     });
+
+    // update bullet list
+    bullets = dataJson['room-state']['bullets'];
+    // console.log(dataJson['room-state']);
+    
   }
 
   if (dataType == 'new-player') {new_player(dataJson);}
@@ -237,7 +241,44 @@ function send_login() {
 
 
 
-// change user position based on keypresses
+// sends keystrokes to server
+function sendKeys(keystrokes) {
+  ws.send(
+    JSON.stringify(
+      {
+        type: 'move',
+        id: user.id, 
+        name: user.name,
+        keys: keystrokes,
+        room: roomName
+      }
+    )
+  );
+}
+
+
+
+// sends bullet information to server
+function sendBullet(){
+  console.log('Bang!')  
+  ws.send(
+    JSON.stringify(
+      {
+        type: 'shoot',
+        id: user.id, 
+        name: user.name,
+        color: user.col,
+        aim: user.aim.heading(),
+        room: roomName
+      }
+    )
+  );
+}
+
+
+
+
+// process keypresses
 function keys() {
 
   let moved = false;
@@ -269,54 +310,13 @@ function keys() {
     shoot = true;    
   }
   
-  
-  return [ moved, shoot, keystrokes ];
+  if (moved) { sendKeys(keystrokes); }
+
+  if (shoot) { sendBullet(); }
 }
 
-// sends current position 
-function sendKeys() {
 
-  let data = keys();
-  let moved = data[0];
-  let keystrokes = data[2];
 
-  if (moved) {
-    
-    ws.send(
-      JSON.stringify(
-        {
-          type: 'move',
-          id: user.id, 
-          name: user.name,
-          keys: keystrokes,
-          room: roomName
-        }
-      )
-    );
-
-  }
-
-}
-
-function sendBullet(){
-  let data = keys();
-  let shoot = data[1];
-  
-  if (shoot) {
-    ws.send(
-      JSON.stringify(
-        {
-          type: 'shoot',
-          id: user.id, 
-          name: user.name,
-          aim: user.aim.heading(),
-          room: roomName
-        }
-      )
-    );
-  }
-
-}
 
 
 
@@ -347,9 +347,8 @@ function inFront(p1, p2){
 function draw() {
   background(220);
 
-  // get user input
-  // input(user); 
-  sendKeys();
+  // process user input
+  keys();
   
   let p = players[user.id];  
   user.aim = createVector(mouseX-p.x, mouseY-p.y);
@@ -362,6 +361,8 @@ function draw() {
     o.display();
   });
 
+
+  // drawing players on screen
   let render = [];
   
   Object.values(players).forEach(p => {
@@ -375,8 +376,6 @@ function draw() {
     p.display();
   })
 
-  // drawing players on screen
-
   
   // players.sort(inFront);
   // players.forEach(p => {
@@ -389,6 +388,7 @@ function draw() {
   });
   */
 
+  /*
   // removing bullets
   bullets_copy = [];
 
@@ -449,5 +449,18 @@ function draw() {
   });
 
   bullets = bullets_copy;
+  */
 
+  console.log(bullets);
+  // draw all bullets
+  Object.values(bullets).forEach(list => {
+    console.log('Rendering bullets');
+  
+    list.forEach(b => {
+      noStroke();
+      fill(b['color']);
+      ellipse(b['x'], b['y'], bullet_diam, bullet_diam);  
+    });
+    
+  });
 }
