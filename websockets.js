@@ -134,7 +134,37 @@ function collide_PXP(p1, p2) {
 
 }
 
-function collide_PXO(p, o) {}
+function collide_PXO(p, o) {
+  // clamping player X coord to obstacle borders
+  let pointX = p.x;
+  pointX = Math.min( pointX, o.right() );
+  pointX = Math.max( pointX, o.left() );
+
+  // clamping player Y coord to obstacle borders
+  let pointY = p.y;
+  pointY = Math.min( pointY, o.bottom() );
+  pointY = Math.max( pointY, o.top() );
+
+  // vector from nearest point to player
+  // let dist = new p5.Vector(thing.x - pointX, thing.y - pointY);
+  // let dist_mag = dist.mag();
+
+  let deltaX = p.x - pointX;
+  let deltaY = p.y - pointY;
+
+  let dist = Math.hypot(deltaX, deltaY);
+
+  if (dist < hit_radius) {
+    // let normal = dist.normalize().mult(hit_radius-dist_mag);
+
+    let normalX = deltaX / dist * (hit_radius-dist);
+    let normalY = deltaY / dist * (hit_radius-dist);
+
+    return [normalX, normalY];
+  } else {
+    return false;
+  }
+}
 
 function collide_BXB(b1, b2) {
   // calculate distance between bullets 
@@ -147,9 +177,87 @@ function collide_BXB(b1, b2) {
   }  
 }
 
-function collide_PXB(p, b) {}
+function collide_PXB(p, b) {
+  // calculate distance between player and bullet 
+  let dist = Math.hypot(p.x-b.x, p.y-b.y);
 
-function collide_BXO(b, o) {}
+  if (dist < hit_radius+bullet_diam/2) {    
+    return true; 
+  } else {
+    return false;
+  }  
+    
+}
+
+function collide_BXO(b, o) {
+  // obstacle X bullet collision
+  
+  // get point at box nearest to bullet
+
+  // clamping bullet X coord to obstacle borders
+  let pointX = b.x;
+  pointX = Math.min( pointX, o.right() );
+  pointX = Math.max( pointX, o.left() );
+
+  // clamping player Y coord to obstacle borders
+  let pointY = b.y;
+  pointY = Math.min( pointY, o.bottom() );
+  pointY = Math.max( pointY, o.top() );
+
+  // vector from nearest point to bullet 
+  // let dist = new p5.Vector(b.x - pointX, b.y - pointY);
+  // let dist_mag = dist.mag();
+
+  let deltaX = b.x - pointX;
+  let deltaY = b.y - pointY;
+
+  let dist = Math.hypot(deltaX, deltaY);
+
+  if (dist < bullet_diam/2) {
+
+    // get normal vector
+    // let normal = dist.normalize().mult(bullet_diam/2-dist_mag);
+
+    let normalX = deltaX / dist * (bullet_diam/2-dist);
+    let normalY = deltaY / dist * (bullet_diam/2-dist);
+
+    // vertical collision
+    if (normalX == 0) {
+      b.aim = 2*Math.PI - b.aim;        
+      b.bounces += 1; 
+    }
+
+    // horizontal collision
+    else if (normalY == 0) {
+      b.aim = Math.PI - b.aim;        
+      b.bounces += 1; 
+    }
+
+    else {
+      let normalAngle = Math.atan(normalY/normalX);
+      // console.log('normalangle is:',normalAngle);
+
+      let velocityAngle = b['aim'];
+      // console.log('velangle is:',velocityAngle);
+
+      let newAngle = 2 * normalAngle - velocityAngle;
+      // console.log('new angle is:',newAngle);
+
+      // reflect velocity vector and bounce
+      // b.vel = b.vel.reflect(normal);
+      b['aim'] = newAngle;
+      b.bounces += 1;
+
+    }
+
+    return [normalX, normalY];
+
+  } else {
+    return false;
+  }
+  
+  
+}
 
 
 
@@ -279,6 +387,7 @@ class Obstacle {
   bottom() {return this.y + this.h;}
   right() {return this.x + this.w;}
 
+  /*
   colliding(thing) {
     // obstacle X player collision
     if (thing instanceof Player) {
@@ -294,11 +403,11 @@ class Obstacle {
       pointY = min( pointY, this.bottom() );
       pointY = max( pointY, this.top() );
 
-      /*
-      noStroke();
-      fill('#ff0000');
-      ellipse(pointX, pointY, 5, 5);
-      */
+      
+      // noStroke();
+      // fill('#ff0000');
+      // ellipse(pointX, pointY, 5, 5);
+      
 
       // vector from nearest point to player
       let dist = new p5.Vector(thing.x - pointX, thing.y - pointY);
@@ -314,8 +423,49 @@ class Obstacle {
     } 
     
   }
+  */
 
 }
+
+
+
+// creating obstacles
+obstacles['testroom'] = [];
+let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(200, 300, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(200, 400, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(300, 400, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(400, 400, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(500, 400, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+
+box = new Obstacle(500, 50, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+
+box = new Obstacle(800, 400, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(800, 300, 100, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(800, 200, 200, 100, '#7a7a7a');
+obstacles['testroom'].push(box);
+box = new Obstacle(900, 150, 100, 50, '#7a7a7a');
+obstacles['testroom'].push(box);
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -377,6 +527,7 @@ wss.on("connection",
           id: newPlayerID.toString(),
           name: newPlayerName.toString(),
           color: newPlayerColor.toString(),
+          hit: false,
           x: newPlayerX,
           y: newPlayerY,
           angle: newPlayerAngle,
@@ -447,39 +598,58 @@ wss.on("connection",
           let y = p['y'];
           let angle = p['angle'];
 
-          // check keystrokes
-          if (keystrokes.includes('w')) {            
-            x += player_speed * Math.sin(angle);
-            y -= player_speed * Math.cos(angle);
-          }
-          if (keystrokes.includes('a')) {   
-            angle -= rotation_speed * (Math.PI/180);                   
-          }
-          if (keystrokes.includes('s')) {
-            x -= player_speed * Math.sin(angle);
-            y += player_speed * Math.cos(angle);
-          }
-          if (keystrokes.includes('d')) {
-            angle += rotation_speed * (Math.PI/180);
-          }
 
-          // clamping x and y to canvas borders
-          x = Math.max(x, hit_radius);
-          x = Math.min(x, canvasW-hit_radius);
-          y = Math.max(y, hit_radius);
-          y = Math.min(y, canvasH-hit_radius);                
+          if (!p['hit']) {
 
-          Object.values(room).forEach(p2 => {
-            if (p2.id != p.id) {
-              // check for coliison between p and p2
-              let result = collide_PXP(p, p2);
-              if (result != false && !p.hit){
-                // adjust p's coords
+            // check keystrokes
+            if (keystrokes.includes('w')) {            
+              x += player_speed * Math.sin(angle);
+              y -= player_speed * Math.cos(angle);
+            }
+            if (keystrokes.includes('a')) {   
+              angle -= rotation_speed * (Math.PI/180);                   
+            }
+            if (keystrokes.includes('s')) {
+              x -= player_speed * Math.sin(angle);
+              y += player_speed * Math.cos(angle);
+            }
+            if (keystrokes.includes('d')) {
+              angle += rotation_speed * (Math.PI/180);
+            }
+
+            // clamping x and y to canvas borders
+            x = Math.max(x, hit_radius);
+            x = Math.min(x, canvasW-hit_radius);
+            y = Math.max(y, hit_radius);
+            y = Math.min(y, canvasH-hit_radius);          
+            
+            
+            // checking for obstacle collision
+    
+            obstacles[roomName].forEach(box => {
+              // let result = box.colliding(user);
+              let result = collide_PXO(p, box);
+              if (result != false){
                 x += result[0];
                 y += result[1];
               }
-            }
-          });
+            });            
+
+
+            // checking for player collision
+            Object.values(room).forEach(p2 => {
+              if (p2['id'] != p['id']) {
+                // check for coliison between p and p2
+                let result = collide_PXP(p, p2);
+                if (result != false && !p2.hit){
+                  // adjust p's coords
+                  x += result[0];
+                  y += result[1];
+                }
+              }
+            });
+
+          }          
 
           // update position
           p['x'] = x;
@@ -507,27 +677,31 @@ wss.on("connection",
         // find player who shot the bullet
         let p = room[ID];
 
-        // let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
-        bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
-        bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
-        // console.log('\nNew bullet position:' + bulletX + ' ' + bulletY + '\n');
+        if (!p['hit']) {
+          // let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
+          bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
+          bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
+          // console.log('\nNew bullet position:' + bulletX + ' ' + bulletY + '\n');
+          
+          // adding new bullet to room
+
+          let newBullet = {          
+            id: ID.toString(),
+            name: dataJson['name'].toString(),
+            color: dataJson['color'].toString(),
+            x: bulletX,
+            y: bulletY,  
+            time: Date.now(),
+            aim: aim,
+            bounces: 0,
+          };
+          // console.log(newBullet);
+
+          bullet_list[ID].push(newBullet);
+          // console.log(bullets);
+        }
+
         
-        // adding new bullet to room
-
-        let newBullet = {          
-          id: ID.toString(),
-          name: dataJson['name'].toString(),
-          color: dataJson['color'].toString(),
-          x: bulletX,
-          y: bulletY,  
-          time: Date.now(),
-          aim: aim,
-          bounces: 0,
-        };
-        // console.log(newBullet);
-
-        bullet_list[ID].push(newBullet);
-        // console.log(bullets);
           
         
       }
@@ -640,6 +814,65 @@ function remove_player(removedID){
 }
 
 
+function send_player_hit(hit_id, roomName){
+
+  let room = rooms[roomName];
+
+  // send notification to all players in room
+  Object.keys(room).forEach(id => {
+
+    let name = room[id]['name'];
+
+    let message = JSON.stringify(
+      {
+        type: 'player-hit',
+        id: hit_id,
+        name: name,
+        room: roomName
+      }
+    )
+
+    // need to check if connection is still open
+    if (sockets.hasOwnProperty(id)){
+      let client = sockets[id];        
+      if (client.readyState === WebSocket.OPEN) {
+        // sending JSON        
+        client.send(message);
+      }
+    }
+    
+  });
+
+}
+
+function send_bullet_explode(b, roomName){
+
+  let room = rooms[roomName];
+
+  // send notification to all players in room
+  Object.keys(room).forEach(id => {
+
+    let message = JSON.stringify(
+      {
+        type: 'bullet-explode',
+        x: b['x'],
+        y: b['y'],
+        room: roomName
+      }
+    )
+
+    // need to check if connection is still open
+    if (sockets.hasOwnProperty(id)){
+      let client = sockets[id];        
+      if (client.readyState === WebSocket.OPEN) {
+        // sending JSON        
+        client.send(message);
+      }
+    }
+    
+  });
+
+}
 
 
 // gets room name and returns corresponding room object
@@ -655,6 +888,7 @@ function getRoom(roomName) {
       id: p['id'],   
       name: p['name'],
       color: p['color'],
+      hit: p['hit'],
       x: p['x'],  
       y: p['y'],
       angle: p['angle']
@@ -667,11 +901,17 @@ function getRoom(roomName) {
 
 
 
-function run_bullet_physics(room_bullets){
+function run_physics(roomName){
+
+  let room_bullets = bullets[roomName];
+  let players = rooms[roomName];
+  let box_list = obstacles[roomName];
+
   Object.keys(room_bullets).forEach(id => {
 
     let list = room_bullets[id];
     let new_list = [];
+
     list.forEach(b => {
 
       let add = true;
@@ -681,6 +921,8 @@ function run_bullet_physics(room_bullets){
       b.y = b['y'] - (bullet_speed) * Math.cos(b['aim'] + Math.PI/2);
 
       // reflecting velocity vector angle on bounce
+
+      // bouncing on walls:
 
       // top and bottom edges
       if (b.y <= bullet_diam/2 || b.y >= canvasH-bullet_diam/2) {      
@@ -693,9 +935,19 @@ function run_bullet_physics(room_bullets){
         b.bounces += 1;          
       }            
 
+      // bouncing on obstacles:
+
+      box_list.forEach(box => {          
+        collide_BXO(b, box);
+      });
+
+
       // removing bullets
 
-      if (b.bounces == maxBounces) {add = false;}
+      if (b.bounces == maxBounces) {
+        add = false;
+        send_bullet_explode(b, roomName);
+      }
 
       // bullet X bullet collision
       list.forEach(b2 => {
@@ -703,10 +955,21 @@ function run_bullet_physics(room_bullets){
           // don't compare bullet with itself        
           if (b['x'] != b2['x'] && b['y'] != b2['y']) {       
             add = false;
+            send_bullet_explode(b, roomName);
           }
         }  
       });
-        
+
+      // player X bullet collision
+      Object.values(players).forEach(p => {
+        if (collide_PXB(p, b) && !p['hit']){
+        // if (collide_PXB(p, b)){
+          console.log(p.name + 'got hit!');
+          p.hit = true;
+          add = false;
+          send_player_hit(p['id'], roomName);
+        }  
+      });        
 
       if (add) {new_list.push(b);}
       
@@ -721,9 +984,9 @@ function run_bullet_physics(room_bullets){
 
 function getBullets(roomName) {
   let room_bullets = bullets[roomName];
-  // console.log(bullets)
-
-  room_bullets = run_bullet_physics(room_bullets);
+  
+  // update bullet positions, calculate collisions, etc.
+  room_bullets = run_physics(roomName);
 
   // creating player list to send to clients
   let bullets_to_send = {};
@@ -753,7 +1016,7 @@ function getBullets(roomName) {
 }
 
 // send room state to all clients every [interval] milliseconds
-var update_rate = 50;
+var update_rate = 100;
 
 var interval1 = 1000/update_rate;
 setInterval(() => {
@@ -763,15 +1026,17 @@ setInterval(() => {
 
     let room = rooms[roomName];    
 
+    // get room state
+    let players = getRoom(roomName);
+    let bullets = getBullets(roomName);
+
     // send room state to all players in room
-    Object.keys(room).forEach(id => {
+    Object.keys(room).forEach(id => {           
 
-      // get room state
-      // let room_state = getRoom(roomName);      
-
+      // room state to send
       let room_state = {
-        'players': getRoom(roomName),
-        'bullets': getBullets(roomName)
+        'players': players,
+        'bullets': bullets
       };
 
       // need to check if connection is still open
@@ -799,8 +1064,15 @@ setInterval(() => {
 // sends initial room state for client-side room init
 function send_set_room(id, roomName) {
 
-  // getting client's room
-  let room = getRoom(roomName);
+  // getting client's room state
+  let players = getRoom(roomName);
+  let bullets = getBullets(roomName);
+
+  // room state to send
+  let room_state = {
+    'players': players,
+    'bullets': bullets
+  };
 
   // get client's websocket and send room state
   let client = sockets[id];
@@ -808,7 +1080,7 @@ function send_set_room(id, roomName) {
     JSON.stringify(
       {
         type: 'set-room',
-        'room-state': room
+        'room-state': room_state
       }
     )
   );
