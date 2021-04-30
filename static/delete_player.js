@@ -10,7 +10,7 @@ function delete_player(dataJson) {
     if (p.id === removedID) {        
       removed_name = p['name'];
       // skip over removed played
-      console.log('Player ' + removed_name + ' has left the room. ');      
+      console.log('Player ' + removed_name + ' has left the room.');      
         
     } else {
       // add active players to copy of player list        
