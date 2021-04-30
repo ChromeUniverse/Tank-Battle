@@ -45,7 +45,7 @@ const server = '192.168.1.109';
 let players = {};
 let bullets = {};
 let obstacles = [];
-// let animations = []
+let animations = []
 
 const roomName = 'testroom';
 
@@ -75,7 +75,7 @@ let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
 let vel_vector = new p5.Vector.fromAngle(0, player_speed);
 console.log(vel_vector.heading() / (Math.PI/180));
-let user = new Player('', userName, userColor, userX, userY, vel_vector);
+let user = new Player('', userName, userColor, false, userX, userY, vel_vector);
 
 
 
@@ -151,7 +151,7 @@ ws.addEventListener("message", msg => {
   if (dataType == 'set-room'){
     if (dataJson['room-state'].length != 0) {
       // looping through players in room state
-      Object.values(dataJson['room-state']).forEach(p=>{
+      Object.values(dataJson['room-state']['players']).forEach(p=>{
         let ID = p['id'];
 
         if (ID != user.id) {
@@ -159,16 +159,19 @@ ws.addEventListener("message", msg => {
           newPlayer = new Player(
             p['id'], 
             p['name'], 
-            p['color'], 
+            p['color'],
+            p['hit'],
             p['x'], 
             p['y'],
             p5.Vector.fromAngle(p['angle'], player_speed)
           );
           players[ID] = newPlayer;
-        }
-
-        
+        }        
       });
+
+      // set bullets
+      bullets = dataJson['room-state']['bullets'];
+
     } else {
       console.log('room is empty');
     }
@@ -201,6 +204,27 @@ ws.addEventListener("message", msg => {
   if (dataType == 'new-player') {new_player(dataJson);}
 
   if (dataType == 'delete-player') {delete_player(dataJson);}
+
+  if (dataType == 'player-hit') {
+    let hit_id = dataJson['id'];
+    let hit_name = dataJson['name'];
+    console.log(hit_name + 'was hit!');
+
+    // update hit variable
+    let p = players[hit_id];
+    p.hit = true;
+
+    // play animation
+    animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
+  }
+  
+  if (dataType == 'bullet-explode') {
+    let x = dataJson['x'];
+    let y = dataJson['y'];
+
+    // play animation
+    animations.push(new Animation(x, y, bullet_explosion_radius, bullet_explosion_duration));
+  }
 
 });
 
@@ -351,7 +375,9 @@ function draw() {
   keys();
   
   let p = players[user.id];  
-  user.aim = createVector(mouseX-p.x, mouseY-p.y);
+
+  if (!user.hit) {user.aim = createVector(mouseX-p.x, mouseY-p.y);}
+
   // strokeWeight(2);
   // stroke('#ff0000');
   // line(mouseX, mouseY, user.x, user.y);
@@ -364,6 +390,7 @@ function draw() {
 
   // drawing players on screen
   let render = [];
+  // console.log(players);
   
   Object.values(players).forEach(p => {
     render.push(p);
@@ -382,11 +409,11 @@ function draw() {
   //   p.display();    
   // });
 
-  /*
+  
   animations.forEach(a => {
     a.display();
   });
-  */
+  
 
   /*
   // removing bullets
@@ -451,11 +478,10 @@ function draw() {
   bullets = bullets_copy;
   */
 
-  console.log(bullets);
+  
   // draw all bullets
   Object.values(bullets).forEach(list => {
-    console.log('Rendering bullets');
-  
+    
     list.forEach(b => {
       noStroke();
       fill(b['color']);
