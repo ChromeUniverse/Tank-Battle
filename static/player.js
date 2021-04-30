@@ -6,7 +6,7 @@
 
 class Player{
   // creates new player instance
-  constructor(id, name, col, x, y, vel){
+  constructor(id, name, col, hit, x, y, vel){
     // identification
     this.id = id;
     this.name = name;
@@ -20,7 +20,7 @@ class Player{
     this.vel = vel;   // velocity
     this.aim = p5.Vector.fromAngle(0, 0);   // turret aim
 
-    this.hit = false; // player got hit
+    this.hit = hit; // player got hit
 
     this.bullets = [];
     this.reloading = false;
@@ -31,11 +31,11 @@ class Player{
   display() {
   
 
-    /*
+    
     noStroke();
     fill('#FF0000');
     ellipse(this.x, this.y, hit_radius*2, hit_radius*2);
-    */
+    
     
     
     push();

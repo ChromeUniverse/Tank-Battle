@@ -22,6 +22,7 @@ function new_player(dataJson) {
       newPlayer_ID, 
       newPlayer_name, 
       newPlayer_color, 
+      false,
       newPlayer_X, 
       newPlayer_Y, 
       p5.Vector.fromAngle(newPlayer_angle, player_speed),
