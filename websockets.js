@@ -742,10 +742,14 @@ function remove_player(removedID){
     let is_done = false;
 
     let room = rooms[roomName];
+    let bullet_room = bullets[roomName];
+
     let new_room = {};
+    let new_bullet_room = {}
 
     Object.keys(room).forEach(id => {
       let p = room[id];
+      let b_list = bullet_room[id];
 
       if (id == removedID) {
         console.log('[ REMOVE PLAYER ]'.red, '[', p['name'].red, p['id'].red, p['room'].red, ']\n');
@@ -755,6 +759,7 @@ function remove_player(removedID){
       } else {
         // add active players
         new_room[id] = p;
+        new_bullet_room[id] = b_list;
       }
 
     });
@@ -769,10 +774,13 @@ function remove_player(removedID){
   // removing empty rooms
   
   new_rooms = {};
+  new_bullets = {};
   
   Object.keys(rooms).forEach(roomName => {
     let is_done = false;
+
     let room = rooms[roomName];
+    let bullet_room = bullets[roomName];
     
     if (Object.keys(room) == 0) {
       console.log('[ EMPTY ROOM ]'.red, '[ Removing room', roomName.red, ']\n');
@@ -780,16 +788,17 @@ function remove_player(removedID){
     } else {
       // add active rooms
       new_rooms[roomName] = room;
+      new_bullets[roomName] = bullet_room;
     }
 
     if (is_done) {return true;}
   });
+
   // update rooms
   rooms = new_rooms;
 
   // get removed player's room
   removed_player_room = rooms[removed_player_room_name];
-
 
   if (rooms.hasOwnProperty(removed_player_room_name)) {
     // alert everybody in the room
