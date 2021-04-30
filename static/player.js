@@ -18,7 +18,7 @@ class Player{
 
     // vectors
     this.vel = vel;   // velocity
-    this.aim = vel;   // turret aim
+    this.aim = p5.Vector.fromAngle(0, 0);   // turret aim
 
     this.hit = false; // player got hit
 

@@ -78,6 +78,7 @@ console.log(vel_vector.heading() / (Math.PI/180));
 let user = new Player('', userName, userColor, userX, userY, vel_vector);
 
 
+
 // creating targets
 
 
@@ -140,6 +141,7 @@ ws.addEventListener("message", msg => {
   if (dataType == 'set-id'){
     let ID = dataJson['id'];
     user.id = ID;
+    players[ID] = user;
     // send login data
     send_login();
   }
@@ -151,16 +153,21 @@ ws.addEventListener("message", msg => {
       // looping through players in room state
       Object.values(dataJson['room-state']).forEach(p=>{
         let ID = p['id'];
-        // create new players and add them to list
-        newPlayer = new Player(
-          p['id'], 
-          p['name'], 
-          p['color'], 
-          p['x'], 
-          p['y'],
-          p5.Vector.fromAngle(p['angle'], player_speed)
-        );
-        players[ID] = newPlayer;
+
+        if (ID != user.id) {
+          // create new players and add them to list
+          newPlayer = new Player(
+            p['id'], 
+            p['name'], 
+            p['color'], 
+            p['x'], 
+            p['y'],
+            p5.Vector.fromAngle(p['angle'], player_speed)
+          );
+          players[ID] = newPlayer;
+        }
+
+        
       });
     } else {
       console.log('room is empty');
@@ -234,7 +241,7 @@ function send_login() {
 function keys() {
 
   let moved = false;
-
+  let shoot = false;
   let keystrokes = '';
   
   // w or up 
@@ -259,11 +266,11 @@ function keys() {
   }
   // mouse click or enter
   if (mouseIsPressed || keyIsDown(13)) {
-    
+    shoot = true;    
   }
   
   
-  return [ moved, keystrokes ];
+  return [ moved, shoot, keystrokes ];
 }
 
 // sends current position 
@@ -271,7 +278,7 @@ function sendKeys() {
 
   let data = keys();
   let moved = data[0];
-  let keystrokes = data[1];
+  let keystrokes = data[2];
 
   if (moved) {
     
@@ -287,6 +294,26 @@ function sendKeys() {
       )
     );
 
+  }
+
+}
+
+function sendBullet(){
+  let data = keys();
+  let shoot = data[1];
+  
+  if (shoot) {
+    ws.send(
+      JSON.stringify(
+        {
+          type: 'shoot',
+          id: user.id, 
+          name: user.name,
+          aim: user.aim.heading(),
+          room: roomName
+        }
+      )
+    );
   }
 
 }
@@ -323,14 +350,13 @@ function draw() {
   // get user input
   // input(user); 
   sendKeys();
-
-  // disable barrel aim if user is hit
-  Object.values(players).forEach(p => {
-    if (p.id == user.id) {
-      let aim_vector = createVector(mouseX-p.x, mouseY-p.y);
-      p.aim = aim_vector;
-    }
-  });
+  
+  let p = players[user.id];  
+  user.aim = createVector(mouseX-p.x, mouseY-p.y);
+  // strokeWeight(2);
+  // stroke('#ff0000');
+  // line(mouseX, mouseY, user.x, user.y);
+  
 
   obstacles.forEach(o => {
     o.display();
