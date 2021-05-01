@@ -46,69 +46,8 @@ const bullet_explosion_radius = 30;
 const bullet_explosion_duration = 200;
 
 
-/*
+// collision checking functions
 
-**************** Player Class ****************
-
-*/
-
-class Player{
-  // creates new player instance
-  constructor(id, name, col, x, y, vel_angle){
-    // identification
-    this.id = id;
-    this.name = name;
-    this.col = col; // color
-
-    // position
-    this.x = x;
-    this.y = y;
-
-    // vectors
-    this.vel_angle = vel_angle;   // velocity
-    this.aim_angle = vel_angle;   // turret aim
-
-    this.hit = false; // player got hit
-
-    this.bullets = [];
-    this.reloading = false;
-    this.cooldown = false;
-  }
-
-  // check for collision with other players
-  colliding(thing) {
-
-    if (thing instanceof Player) {
-
-      // vector between both players
-      // let dist = createVector(thing.x-this.x, thing.y-this.y);
-      // let dist_mag = dist.mag();
-      distX = thing.x-this.x;
-      distY = thing.y-this.y;
-      let dist_mag = Math.hypot(distX, distY);
-
-      if (dist_mag < hit_radius*2) {
-        // let normal = dist.normalize().mult(hit_radius*2-dist_mag);
-        // return [normal.x, normal.y];
-
-        // take X and Y components of the normal vector, normalize and multiply by overlap
-
-        let normalX = distX / dist_mag * (hit_radius*2-dist_mag);
-        let normalY = distY / dist_mag * (hit_radius*2-dist_mag);
-        return [normalX, normalY];
-
-      } else {
-        return false;
-      }
-      
-
-    }
-
-  } 
-  
-}
-
-// check for collision with other players
 function collide_PXP(p1, p2) {
 
   // vector between both players
@@ -260,107 +199,110 @@ function collide_BXO(b, o) {
 }
 
 
+// process 'shoot' events
+function shoot(p, aim) {
 
-/*
+  if (!p['hit']) {
+    // let vel = createVector(mouseX - user.x, mouseY - user.y);
+    // let velNormal = vel.normalize();
+    // let velScaled = velNormal.mult(bullet_speed);
 
-**************** Bullet Class ****************
+    let roomName = p['room']
 
-*/
+    let b_list = bullets[roomName][p['id']];
+    let list = p['shots'];
 
-class Bullet {
+    if (list.length > 0) {
+      // only add new bullet after [bullet_interval] milliseconds have passed
+      let last_time = list[list.length-1]['time'];
 
-  constructor(p, time, vel) {
-    this.id = p.id;       // -> ID of player who shot bullet
-    this.name = p.name;   // -> name of player who shot bullet
-    this.col = p.col;
+      // timeout after three shots to "reload"
+      if (list.length == max_shots) {           
+        
+        p['reloading'] = true;
 
-    let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
+        // do nothing for [reload_timeout] milliseconds
+        if (Date.now() - last_time > reload_interval) {
 
-    this.x = p.x + initial_pos.x;
-    this.y = p.y + initial_pos.y;
-    // this.x = p.x;
-    // this.y = p.y;
-    this.time = time;   // -> time the bullet was shot
-    this.vel = vel;     // -> velocity vector
-    this.bounces = 0;    
-    
-  }
+          // reset user's bullets
 
-  // check for collisions
+          // bullets[roomName][p['id']] = [];
+          p['shots'] = [];
+          p['reloading'] = false;
 
-  colliding(thing){    
-
-    // vector between bullet and thing
-    let dist = createVector(thing.x-this.x, thing.y-this.y);
-    let dist_mag = dist.mag();
-
-
-    // bullet X player collision
-    if (thing instanceof Player) {           
-
-      if (dist_mag < hit_radius+bullet_diam/2) {
-        return true; 
+        }        
+        
       } else {
-        return false;
+
+        if ( Date.now() - last_time > bullet_interval ) {
+          p['reloading'] = false;
+          p['cooldown'] = true;
+          // let bullet = new Bullet(user, Date.now(), velScaled);  
+          
+          let bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
+          let bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);          
+                
+          let newBullet = {          
+            id: p['id'].toString(),
+            name: p['name'].toString(),
+            color: p['color'].toString(),
+            x: bulletX,
+            y: bulletY,  
+            time: Date.now(),
+            aim: aim,
+            bounces: 0,
+          };
+          // console.log(newBullet);
+
+          list.push(newBullet);  
+          b_list.push(newBullet);   
+          send_bullet_explode(newBullet, roomName);        
+          // console.log(bullets);
+          
+        }
+
       }
-    }
-  
 
-    // bullet X bullet collision
-    if (thing instanceof Bullet) {      
-      if (dist_mag < bullet_diam) {
-        return true; 
-      } else {
-        return false;
-      }
-    } 
+      // user.bullets[user.bullets.length()-1];
 
+    } else {
 
-    // obstacle X bullet collision
-    if (thing instanceof Obstacle ) {
-
-      // get point at box nearest to bullet
-
-      // clamping bullet X coord to obstacle borders
-      let pointX = this.x;
-      pointX = min( pointX, thing.right() );
-      pointX = max( pointX, thing.left() );
-
-      // clamping player Y coord to obstacle borders
-      let pointY = this.y;
-      pointY = min( pointY, thing.bottom() );
-      pointY = max( pointY, thing.top() );
-
-      /*
-      noStroke();
-      fill('#0000ff');
-      ellipse(pointX, pointY, 5, 5);
+      /*      
+      user.reloading = false;
+      user.cooldown = true;
+      let bullet = new Bullet(user, Date.now(), velScaled);   
+      bullets.push(bullet);
+      user.bullets.push(bullet);
       */
 
-      // vector from nearest point to bullet 
-      let dist = new p5.Vector(this.x - pointX, this.y - pointY);
-      let dist_mag = dist.mag();
+      p['reloading'] = false;
+      p['cooldown'] = true;
+      // let bullet = new Bullet(user, Date.now(), velScaled);  
+      
+      let bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
+      let bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);          
+            
+      let newBullet = {          
+        id: p['id'].toString(),
+        name: p['name'].toString(),
+        color: p['color'].toString(),
+        x: bulletX,
+        y: bulletY,  
+        time: Date.now(),
+        aim: aim,
+        bounces: 0,
+      };
+      // console.log(newBullet);
+      list.push(newBullet);
+      b_list.push(newBullet);    
+      send_bullet_explode(newBullet, roomName);       
+      // console.log(bullets);
 
-      if (dist_mag < bullet_diam/2) {
-
-        // get normal vector
-        let normal = dist.normalize().mult(bullet_diam/2-dist_mag);
-
-        // reflect velocity vector and bounce
-        this.vel = this.vel.reflect(normal);
-        this.bounces += 1;
-
-        return [normal.x, normal.y];
-
-      } else {
-        return false;
-      }
-    
     }
-    
   }
-
+  
 }
+
 
 
 
@@ -531,7 +473,10 @@ wss.on("connection",
           x: newPlayerX,
           y: newPlayerY,
           angle: newPlayerAngle,
-          room: roomName,          
+          room: roomName,   
+          shots: [],       
+          reloading : false,
+          cooldown : false
         }
 
         // log new player
@@ -559,6 +504,9 @@ wss.on("connection",
         
         console.log("[ ONLINE PLAYER LIST ]".magenta, "\n", rooms, '\n');
 
+
+        // sending data to all clients in room
+
         Object.keys(room).forEach(id => {
           let client = sockets[id];
           if (client.readyState === WebSocket.OPEN) {
@@ -571,7 +519,8 @@ wss.on("connection",
                 color: newPlayerColor.toString(),
                 x: newPlayerX,
                 y: newPlayerY,  
-                angle: newPlayerAngle
+                angle: newPlayerAngle,
+                shots: 0,
               }
             )
             // send JSON
@@ -679,12 +628,16 @@ wss.on("connection",
 
         if (!p['hit']) {
           // let initial_pos = p5.Vector.fromAngle(vel.heading(), hit_radius + bullet_diam/2);
-          bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
-          bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
+          // bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
+          // bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
           // console.log('\nNew bullet position:' + bulletX + ' ' + bulletY + '\n');
           
           // adding new bullet to room
 
+          // process 'shoot' event
+          shoot(p, aim);
+
+          /*
           let newBullet = {          
             id: ID.toString(),
             name: dataJson['name'].toString(),
@@ -699,6 +652,7 @@ wss.on("connection",
 
           bullet_list[ID].push(newBullet);
           // console.log(bullets);
+          */
         }
 
         
@@ -900,7 +854,8 @@ function getRoom(roomName) {
       hit: p['hit'],
       x: p['x'],  
       y: p['y'],
-      angle: p['angle']
+      angle: p['angle'],
+      shots: p['shots'],
     }
     room_to_send[p['id']] = player_to_send;
   });
@@ -922,9 +877,6 @@ function run_physics(roomName){
     let new_list = [];
 
     list.forEach(b => {
-
-      let add = true;
-
       // updating position based on velocity vector angle    
       b.x = b['x'] + (bullet_speed) * Math.sin(b['aim'] + Math.PI/2);
       b.y = b['y'] - (bullet_speed) * Math.cos(b['aim'] + Math.PI/2);
@@ -942,7 +894,7 @@ function run_physics(roomName){
       if (b.x <= bullet_diam/2 || b.x >= canvasW-bullet_diam/2) {
         b.aim = Math.PI - b.aim; 
         b.bounces += 1;          
-      }            
+      }       
 
       // bouncing on obstacles:
 
@@ -950,6 +902,12 @@ function run_physics(roomName){
         collide_BXO(b, box);
       });
 
+    });
+
+
+    list.forEach(b => {
+
+      let add = true;
 
       // removing bullets
 
