@@ -104,7 +104,7 @@ class Player{
     textAlign(CENTER, BOTTOM);
     text(this.name, this.x, this.y+tankH/2+40);  
   
-    if (!this.hit && this.id == user.id) {
+    if (!this.hit && this.id == user.id && user.id != '') {
       // drawing reload bar
       // if (this.reloading) {
         this.draw_reload_bar();

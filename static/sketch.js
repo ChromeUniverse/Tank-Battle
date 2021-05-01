@@ -75,7 +75,7 @@ let userY = Math.floor(Math.random() * (maxY-minY) ) + minY;
 
 let vel_vector = new p5.Vector.fromAngle(0, player_speed);
 console.log(vel_vector.heading() / (Math.PI/180));
-let user = new Player('', userName, userColor, false, userX, userY, vel_vector);
+let user = new Player('', userName, userColor, false, userX, userY, vel_vector, []);
 
 
 
@@ -139,6 +139,7 @@ ws.addEventListener("message", msg => {
 
   // set user's unique ID
   if (dataType == 'set-id'){
+    console.log('got id');
     let ID = dataJson['id'];
     user.id = ID;
     players[ID] = user;
@@ -377,9 +378,11 @@ function draw() {
   // process user input
   keys();
   
+  // console.log(user);
+
   let p = players[user.id];  
 
-  if (!user.hit) {user.aim = createVector(mouseX-p.x, mouseY-p.y);}
+  if (!user.hit && user.id != '') {user.aim = createVector(mouseX-p.x, mouseY-p.y);}
 
   // strokeWeight(2);
   // stroke('#ff0000');
