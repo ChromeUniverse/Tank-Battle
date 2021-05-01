@@ -11,7 +11,10 @@ function delete_player(dataJson) {
     let p = players[id];
     let b_list = bullets[id];
 
-    if (p.id === removedID) {        
+    console.log(p);
+    console.log(players);
+
+    if (p.id == removedID) {        
       removed_name = p['name'];
       // skip over removed played
       console.log('Player ' + removed_name + ' has left the room.');      
@@ -22,8 +25,9 @@ function delete_player(dataJson) {
       bullets_copy[p.id] = b_list;  
     }
 
-    // update players list
-    players = players_copy;
-
   });
+
+  // update players list
+  players = players_copy;
+  bullets = bullets_copy;
 }
