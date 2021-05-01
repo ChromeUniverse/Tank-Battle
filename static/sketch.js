@@ -36,9 +36,9 @@ const bullet_explosion_duration = 200;
 
 // websockets server address
 // const server = 'localhost';
-const server = '192.168.1.109';
+// const server = '192.168.1.109';
 // const server = '34.200.98.64';
-// const server = '18.229.74.58';
+const server = '18.229.74.58';
 
 
 // containers
@@ -163,7 +163,8 @@ ws.addEventListener("message", msg => {
             p['hit'],
             p['x'], 
             p['y'],
-            p5.Vector.fromAngle(p['angle'], player_speed)
+            p5.Vector.fromAngle(p['angle'], player_speed),
+            []            
           );
           players[ID] = newPlayer;
         }        
@@ -192,6 +193,7 @@ ws.addEventListener("message", msg => {
         player.x = entry['x'];
         player.y = entry['y'];
         player.vel.setHeading(-entry['angle']);
+        player.shots = entry['shots'];
       }
     });
 
@@ -332,6 +334,7 @@ function keys() {
   // mouse click or enter
   if (mouseIsPressed || keyIsDown(13)) {
     shoot = true;    
+    user.cooldown = true;
   }
   
   if (moved) { sendKeys(keystrokes); }
@@ -403,80 +406,11 @@ function draw() {
     p.display();
   })
 
-  
-  // players.sort(inFront);
-  // players.forEach(p => {
-  //   p.display();    
-  // });
-
+ 
   
   animations.forEach(a => {
     a.display();
   });
-  
-
-  /*
-  // removing bullets
-  bullets_copy = [];
-
-  // update positions and draw them
-  bullets.forEach(b => {    
-    b.display();
-  });
-
-  // checking for bullet collisions
-  bullets.forEach(b => {        
-
-    let add; // bool
-
-    if (b.bounces < maxBounces) {      
-      add = true;
-    } else {
-      // animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
-    }
-
-    // bullet X player
-    players.forEach(p => {
-      if (b.colliding(p) && !p.hit){ 
-      // if (b.colliding(p)){        
-
-        if (b.id != p.id) {
-          console.log(b.name + "'s bullet hit " + p.name);
-          p.hit = true;
-          // animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
-          add = false;
-        } 
-        
-        else {
-          console.log(b.name + ' is dead!');
-          p.hit = true;
-          // animations.push(new Animation(p.x, p.y, explosion_radius, explosion_duration));
-          add = false;
-        }        
-
-      }      
-    }); 
-    
-    // bullet X bullet
-    bullets.forEach(b2 => {
-      if (b.colliding(b2)){
-        // don't compare bullet with itself        
-        if (b.x != b2.x && b.y != b2.y) {
-          console.log("Bullets collided!");
-          // animations.push(new Animation(b.x, b.y, bullet_explosion_radius, bullet_explosion_duration));
-          add = false;
-        }
-      }      
-    });
-
-    if (add) {
-      bullets_copy.push(b); 
-    } 
-
-  });
-
-  bullets = bullets_copy;
-  */
 
   
   // draw all bullets

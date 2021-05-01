@@ -1,9 +1,9 @@
 function shoot() {
   // do nothing if user is hit
   if (!user.hit) {
-    let vel = createVector(mouseX - user.x, mouseY - user.y);
-    let velNormal = vel.normalize();
-    let velScaled = velNormal.mult(bullet_speed);
+    // let vel = createVector(mouseX - user.x, mouseY - user.y);
+    // let velNormal = vel.normalize();
+    // let velScaled = velNormal.mult(bullet_speed);
 
     if (user.bullets.length > 0) {
       // only add new bullet after [bullet_interval] milliseconds have passed
@@ -16,7 +16,7 @@ function shoot() {
         // do nothing for [reload_timeout] milliseconds
         if (Date.now() - last_time > reload_interval) {
           // reset user's bullets
-          user.bullets = [];
+          // user.bullets = [];
           user.reloading = false;
         }        
         
