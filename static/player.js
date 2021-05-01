@@ -6,7 +6,7 @@
 
 class Player{
   // creates new player instance
-  constructor(id, name, col, hit, x, y, vel){
+  constructor(id, name, col, hit, x, y, vel, shots){
     // identification
     this.id = id;
     this.name = name;
@@ -22,7 +22,7 @@ class Player{
 
     this.hit = hit; // player got hit
 
-    this.bullets = [];
+    this.shots = shots;
     this.reloading = false;
     this.cooldown = false;
   }
@@ -30,12 +30,11 @@ class Player{
   // renders the player on the canvas
   display() {
   
-
-    
+    /*
     noStroke();
     fill('#FF0000');
     ellipse(this.x, this.y, hit_radius*2, hit_radius*2);
-    
+    */
     
     
     push();
@@ -104,43 +103,101 @@ class Player{
     fill(color(255));
     textAlign(CENTER, BOTTOM);
     text(this.name, this.x, this.y+tankH/2+40);  
-
-
-    if (this.id == user.id) {
+  
+    if (!this.hit && this.id == user.id) {
       // drawing reload bar
-      if (this.reloading) {
-        draw_reload_bar(this);
-      } 
-      if (this.cooldown) {
-        draw_cooldown_bar(this);
-      }
-      // draw bar displaying number of reamining shots
-      draw_shots_bar(this);
-    }
-
-    
+      // if (this.reloading) {
+        this.draw_reload_bar();
+      // } 
+      // if (this.cooldown) {        
+        this.draw_cooldown_bar();
+      // }
+      // draw bar displaying number of remaining shots
+      this.draw_shots_bar();
+    }   
+      
     
   }
 
-  // check for collision with other players
-  colliding(thing) {
+  
+  draw_cooldown_bar() {
 
-    if (thing instanceof Player) {
-
-      // vector between both players
-      let dist = createVector(thing.x-this.x, thing.y-this.y);
-      let dist_mag = dist.mag();
-
-      if (dist_mag < hit_radius*2) {
-        let normal = dist.normalize().mult(hit_radius*2-dist_mag);
-        return [normal.x, normal.y];
-      } else {
-        return false;
+    let b_list = this.shots;
+  
+    if (!this.reloading && b_list.length != 0 && this.cooldown) {
+      strokeWeight(2);
+      stroke(color(220));
+      rectMode(CENTER);
+      fill('#ffaa66');
+      rect(this.x, this.y-60, 70, 10);
+  
+      let ratio = (Date.now() - b_list[b_list.length-1].time)/bullet_interval;
+      // console.log(ratio);
+      fill(color(49, 191, 6));
+      rectMode(CORNER);
+      if (ratio <= 1) {  
+        // noStroke();  
+        rect(this.x-35, this.y-65, 70*ratio, 10);  
+      } 
+      else {
+        this.cooldown = false;
       }
-      
-
     }
+    
+  }
+  
+  draw_shots_bar() {
+  
+    let b_list = this.shots;
+  
+    strokeWeight(2);
+    stroke(color(220));
+    rectMode(CENTER);
+    fill('#ffaa66');
+    rect(this.x, this.y-70, 70, 10);
+  
+    let ratio;
+  
+    ratio = b_list.length/max_shots;
+  
+    // console.log(ratio);
+    fill(color(5, 113, 255));
+    rectMode(CORNER);
+    if (ratio <= 1) {  
+      // noStroke();  
+      rect(this.x-35, this.y-75, 70*(1-ratio), 10);  
+    } 
+    if (ratio == 0) {
+      this.reloading = true;
+    }
+  
+  }
+  
+  draw_reload_bar() {
 
-  } 
+    let b_list = this.shots;
+
+    if (this.reloading && b_list.length != 0) {
+      let b_list = this.shots;
+  
+      strokeWeight(2);
+      stroke(color(220));
+      rectMode(CENTER);
+      fill('#ffaa66');
+      rect(this.x, this.y-60, 70, 10);
+    
+      let ratio = (Date.now() - b_list[b_list.length-1].time)/reload_interval;
+      // console.log(ratio);
+      fill('#ff0000');
+      rectMode(CORNER);
+      if (ratio <= 1) {    
+        rect(this.x-35, this.y-65, 70*ratio, 10);  
+      } else {
+        this.reloading = false;
+      }
+    }
+  
+  
+  }
   
 }
