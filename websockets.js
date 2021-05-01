@@ -32,7 +32,7 @@ const player_speed = 3;
 const rotation_speed = 3;
 
 // bullet parameters
-const bullet_speed = 1;
+const bullet_speed = 4;
 const bullet_interval = 350;
 const bullet_diam = 15;
 const reload_interval = 2000;
