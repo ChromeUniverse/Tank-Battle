@@ -35,10 +35,10 @@ const bullet_explosion_duration = 200;
 
 
 // websockets server address
-// const server = 'localhost';
+const server = 'localhost';
 // const server = '192.168.1.109';
 // const server = '34.200.98.64';
-const server = '18.229.74.58';
+// const server = '18.229.74.58';
 
 
 // containers
@@ -48,6 +48,10 @@ let obstacles = [];
 let animations = []
 
 const roomName = 'testroom';
+
+// in SECONDS!
+const pre_match_time = 6;     
+const post_match_time = 6;  
 
 
 
@@ -113,7 +117,9 @@ obstacles.push(box);
 box = new Obstacle(900, 150, 100, 50, '#7a7a7a');
 obstacles.push(box);
 
-
+let match_update = '';
+let winner_name = '';
+let update_start_time = 0;
 
 /*
 
@@ -229,11 +235,105 @@ ws.addEventListener("message", msg => {
     animations.push(new Animation(x, y, bullet_explosion_radius, bullet_explosion_duration));
   }
 
+  if (dataType == 'set-aim') {
+  
+    let shooter_id = dataJson['id'];
+    let shooter_aim = dataJson['aim'];    
+
+    // update hit variable
+    let p = players[shooter_id];
+
+    if (shooter_id != user.id){
+      console.log('modifying angle for player ' + dataJson['name']);
+      p.aim = p5.Vector.fromAngle(shooter_aim, player_speed);   // turret aim  
+    }
+
+  }
+
+  if (dataType == 'match-update') {
+
+    update_start_time = Date.now();
+
+    let matchState = dataJson['match-state'];
+
+    if (matchState == 'pre-match') {
+
+      match_update = 'pre-match';
+
+      // reset room
+
+      Object.values(players).forEach(p => {
+        // revive all players
+        p.hit = false;
+        // reset weapon variables 
+        p.vel = p5.Vector.fromAngle(0, player_speed);
+        p.aim = p5.Vector.fromAngle(0, player_speed);
+        p.shots = [];          
+        p.reloading = false;
+        p.cooldown = false;
+    
+      });
+
+    }
+
+    if (matchState == 'match-start') {
+      match_update = 'match-start';
+
+    }
+
+    if (matchState == 'post-match') {
+      match_update = 'post-match';
+      winner_name = dataJson['name'];
+    }
+
+  }
+
 });
 
 
 
+function display_match_update() {
 
+  textAlign(CENTER, TOP);
+  textSize(32);
+  fill('#000000');
+
+  if (match_update == 'pre-match') {
+
+    console.log(Date.now() - update_start_time);
+    
+
+    if (Date.now() - update_start_time > pre_match_time*1000 - 1000) {
+      text('1', canvasW/2, 30);
+    } else if (Date.now() - update_start_time > pre_match_time*1000 - 2000) {
+      text('2', canvasW/2, 30);
+    } else if (Date.now() - update_start_time > pre_match_time*1000 - 3000) {
+      text('3', canvasW/2, 30);
+    } else {
+      text('Pre-match!', canvasW/2, 30);
+    }
+
+  }
+
+  
+
+  if (match_update == 'match-start') {
+
+    if (Date.now() - update_start_time < 3000) {    
+      text('Go!', canvasW/2, 30);
+    }
+
+  }
+
+  if (match_update == 'post-match') {
+
+    text('Match over!', canvasW/2, 30);
+    
+    let msg = winner_name + ' wins!';
+    
+    text(msg, canvasW/2, 80);
+  }
+}
 
 
 
@@ -426,4 +526,6 @@ function draw() {
     });
     
   });
+
+  display_match_update();
 }
