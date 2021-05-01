@@ -39,6 +39,16 @@ _Coming soon_
 * Made a simple map with obstacles
 * Explosion animations!
   * Appear on Player x Bullet, Bullet x Bullet collisions and after bullets have bounced on surfaces a set number of times
+* First functional online multiplayer
 
 ## Todo
 * Add websockets and multiplayer features
+  * Improve bars and fix bugs
+  * Remove bullet lists on player exit
+  * Send turret aiming angle on shoot event
+  * Add spawn points and obstacle containers
+* Implement lag-minimizing measures
+  * Client-side prediction
+  * Server reconciliation
+  * Entity interpolation
+  * Lag compensation
