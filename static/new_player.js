@@ -22,10 +22,14 @@ function new_player(dataJson) {
       newPlayer_ID, 
       newPlayer_name, 
       newPlayer_color, 
-      false,
+      // hit
+      false,              
       newPlayer_X, 
       newPlayer_Y, 
+      // velocity vector angle
       p5.Vector.fromAngle(newPlayer_angle, player_speed),
+      // shots list 
+      []             
     );      
     players[newPlayer_ID] = newPlayer;
 
