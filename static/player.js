@@ -25,6 +25,7 @@ class Player{
     this.shots = shots;
     this.reloading = false;
     this.cooldown = false;
+    this.full_mag = true;
   }
 
   // renders the player on the canvas
@@ -106,12 +107,12 @@ class Player{
   
     if (!this.hit && this.id == user.id && user.id != '') {
       // drawing reload bar
-      // if (this.reloading) {
+      if (this.reloading) {
         this.draw_reload_bar();
-      // } 
-      // if (this.cooldown) {        
+      } 
+      if (this.cooldown) {        
         this.draw_cooldown_bar();
-      // }
+      }
       // draw bar displaying number of remaining shots
       this.draw_shots_bar();
     }   
@@ -124,7 +125,7 @@ class Player{
 
     let b_list = this.shots;
   
-    if (!this.reloading && b_list.length != 0 && this.cooldown) {
+    if (!this.reloading && b_list.length != 0 ) {
       strokeWeight(2);
       stroke(color(220));
       rectMode(CENTER);
@@ -163,12 +164,21 @@ class Player{
     // console.log(ratio);
     fill(color(5, 113, 255));
     rectMode(CORNER);
-    if (ratio <= 1) {  
+    if (ratio < 1) {  
       // noStroke();  
       rect(this.x-35, this.y-75, 70*(1-ratio), 10);  
+      this.full_mag = false;
+      this.reloading = false;
     } 
-    if (ratio == 0) {
+    if (ratio == 1) {
       this.reloading = true;
+
+    }    
+
+    if (this.full_mag) {
+      rect(this.x-35, this.y-75, 70, 10);  
+      this.cooldown = false;
+      this.reloading = false;
     }
   
   }
@@ -177,8 +187,9 @@ class Player{
 
     let b_list = this.shots;
 
-    if (this.reloading && b_list.length != 0) {
-      let b_list = this.shots;
+    if (b_list.length != 0) {      
+
+      this.cooldown = false;
   
       strokeWeight(2);
       stroke(color(220));
@@ -194,6 +205,8 @@ class Player{
         rect(this.x-35, this.y-65, 70*ratio, 10);  
       } else {
         this.reloading = false;
+        
+        this.full_mag = true;
       }
     }
   
