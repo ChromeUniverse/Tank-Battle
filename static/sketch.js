@@ -35,10 +35,10 @@ const bullet_explosion_duration = 200;
 
 
 // websockets server address
-const server = 'localhost';
+// const server = 'localhost';
 // const server = '192.168.1.109';
 // const server = '34.200.98.64';
-// const server = '18.229.74.58';
+const server = '18.229.74.58';
 
 
 // containers
