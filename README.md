@@ -6,7 +6,7 @@ This project was made solely for educational purposes.
 
 ## Gallery
 
-![image](https://media.discordapp.net/attachments/760252264723644426/837088289374732378/unknown.png?width=1271&height=632)
+![image](https://media.discordapp.net/attachments/760252264723644426/837088289374732378/unknown.png?width=800&height=400)
 
 
 ## General Info
