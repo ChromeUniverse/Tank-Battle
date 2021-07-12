@@ -40,6 +40,7 @@ const post_match_time = 6;
 
 // collision checking functions
 
+// player x player collision
 function collide_PXP(p1, p2) {
 
   // vector between both players
@@ -65,6 +66,7 @@ function collide_PXP(p1, p2) {
 
 }
 
+// player x obstacle collision
 function collide_PXO(p, o) {
   // clamping player X coord to obstacle borders
   let pointX = p.x;
@@ -97,6 +99,7 @@ function collide_PXO(p, o) {
   }
 }
 
+// bullet x bullet collision
 function collide_BXB(b1, b2) {
   // calculate distance between bullets 
   let dist = Math.hypot(b1.x-b2.x, b1.y-b2.y);
@@ -108,6 +111,7 @@ function collide_BXB(b1, b2) {
   }  
 }
 
+// player x bullet collision
 function collide_PXB(p, b) {
   // calculate distance between player and bullet 
   let dist = Math.hypot(p.x-b.x, p.y-b.y);
@@ -120,8 +124,8 @@ function collide_PXB(p, b) {
     
 }
 
+// bullet x obstacle collision
 function collide_BXO(b, o) {
-  // obstacle X bullet collision
   
   // get point at box nearest to bullet
 
@@ -195,9 +199,6 @@ function collide_BXO(b, o) {
 function shoot(p, aim) {
 
   if (!p['hit']) {
-    // let vel = createVector(mouseX - user.x, mouseY - user.y);
-    // let velNormal = vel.normalize();
-    // let velScaled = velNormal.mult(bullet_speed);
 
     let roomName = p['room']
 
@@ -217,8 +218,6 @@ function shoot(p, aim) {
         if (Date.now() - last_time > reload_interval) {
 
           // reset user's bullets
-
-          // bullets[roomName][p['id']] = [];
           p['shots'] = [];
           p['reloading'] = false;
 
@@ -232,7 +231,9 @@ function shoot(p, aim) {
           // let bullet = new Bullet(user, Date.now(), velScaled);  
           
           let bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.sin(aim + Math.PI/2);
-          let bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);          
+          // let bulletX = p['x'] + (hit_radius + bullet_diam/2) * Math.cos(aim);
+          let bulletY = p['y'] - (hit_radius + bullet_diam/2) * Math.cos(aim + Math.PI/2);
+          // let bulletY = p['y'] + (hit_radius + bullet_diam/2) * Math.sin(aim);      
                 
           let newBullet = {          
             id: p['id'].toString(),
@@ -323,44 +324,6 @@ class Obstacle {
   bottom() {return this.y + this.h;}
   right() {return this.x + this.w;}
 
-  /*
-  colliding(thing) {
-    // obstacle X player collision
-    if (thing instanceof Player) {
-      // get point at rectangle nearest to player
-
-      // clamping player X coord to obstacle borders
-      let pointX = thing.x;
-      pointX = min( pointX, this.right() );
-      pointX = max( pointX, this.left() );
-
-      // clamping player Y coord to obstacle borders
-      let pointY = thing.y;
-      pointY = min( pointY, this.bottom() );
-      pointY = max( pointY, this.top() );
-
-      
-      // noStroke();
-      // fill('#ff0000');
-      // ellipse(pointX, pointY, 5, 5);
-      
-
-      // vector from nearest point to player
-      let dist = new p5.Vector(thing.x - pointX, thing.y - pointY);
-      let dist_mag = dist.mag();
-
-      if (dist_mag < hit_radius) {
-        let normal = dist.normalize().mult(hit_radius-dist_mag);
-        return [normal.x, normal.y];
-      } else {
-        return false;
-      }
-
-    } 
-    
-  }
-  */
-
 }
 
 
@@ -395,8 +358,7 @@ obstacles['testroom'].push(box);
 
 
 
-
-
+// player spawn locations
 
 let spawn_points = [ 
   [ 100, 100 ], 
@@ -411,9 +373,7 @@ let spawn_points = [
 
 
 
-
-
-// genreate unique ID for players
+// generate unique ID
 function getUniqueID() {
 	function s4() {
 		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
@@ -423,8 +383,8 @@ function getUniqueID() {
 
 
 // Websockets stuff
-wss.on("connection",
-	ws => {	
+wss.on("connection", ws => {	
+
     // generate new uniqueID
     let newID = getUniqueID();
     
@@ -488,13 +448,9 @@ wss.on("connection",
 
         // creating new rooms status entry if it doesn't already exist
         if (!rooms_status.hasOwnProperty(roomName)){
+          
           // room status entry doesn't exist
-
-          console.log('[ NEW STATUS ENTRY ]'.cyan, '[ In room:', roomName.cyan, ']\n');
-
-
-          // console.log("[ PLAYERS LIST ]".magenta, "\n", rooms, '\n');
-          // console.log("[ BULLETS LIST ]".magenta, "\n", bullets, '\n');      
+          console.log('[ NEW ROOM STATUS ENTRY ]'.cyan, '[ In room:', roomName.cyan, ']\n');
 
           rooms_status[roomName] = {
             create_time: Date.now(),            
@@ -508,7 +464,8 @@ wss.on("connection",
 
           // creating new room
           console.log('[ NEW ROOM ]'.cyan, '[ Creating room:', roomName.cyan, ']\n');      
-
+          
+          // get spawn position
           let spawn_point = spawn_points[0];
           let newPlayerX = spawn_point[0];
           let newPlayerY = spawn_point[1];
@@ -568,7 +525,7 @@ wss.on("connection",
 
               // update rooms
 
-              let spawn_point = spawn_points[status['num_players']];
+              let spawn_point = spawn_points[status['num_players']-1];
               let newPlayerX = spawn_point[0];
               let newPlayerY = spawn_point[1];
 
@@ -657,14 +614,16 @@ wss.on("connection",
           // only process move and shoot events when the match is running
 
           if (status['match_running']) {
+
+            // find who sent the update        
+            let ID = dataJson['id'];    
+            let roomName = dataJson['room'];
+            let room = rooms[roomName];
+            let p = room[ID];
           
             // triggered on every new 'move' message
             if (dataType == "move") {                    
-              // find who sent the 'move' update        
-              let ID = dataJson['id'];    
-              let roomName = dataJson['room'];
-              let room = rooms[roomName];
-
+              
               let keystrokes = dataJson['keys'];
 
               if (room.hasOwnProperty(ID)) {
@@ -673,24 +632,37 @@ wss.on("connection",
                 let y = p['y'];
                 let angle = p['angle'];
 
-
                 if (!p['hit']) {
 
                   // check keystrokes
                   if (keystrokes.includes('w')) {            
                     x += player_speed * Math.sin(angle);
                     y -= player_speed * Math.cos(angle);
+
+                    if (keystrokes.includes('a')) {   
+                      angle -= rotation_speed * (Math.PI/180);                   
+                    }
+
+                    if (keystrokes.includes('d')) {
+                      angle += rotation_speed * (Math.PI/180);
+                    }
+
                   }
-                  if (keystrokes.includes('a')) {   
-                    angle -= rotation_speed * (Math.PI/180);                   
-                  }
+                  
                   if (keystrokes.includes('s')) {
                     x -= player_speed * Math.sin(angle);
                     y += player_speed * Math.cos(angle);
+
+
+                    if (keystrokes.includes('a')) {   
+                      angle += rotation_speed * (Math.PI/180);                   
+                    }
+
+                    if (keystrokes.includes('d')) {
+                      angle -= rotation_speed * (Math.PI/180);
+                    }
                   }
-                  if (keystrokes.includes('d')) {
-                    angle += rotation_speed * (Math.PI/180);
-                  }
+                  
 
                   // clamping x and y to canvas borders
                   x = Math.max(x, hit_radius);
@@ -712,6 +684,7 @@ wss.on("connection",
 
 
                   // checking for player collision
+
                   Object.values(room).forEach(p2 => {
                     if (p2['id'] != p['id']) {
                       // check for coliison between p and p2
@@ -735,9 +708,9 @@ wss.on("connection",
                   
             }     
             
-            // trigeered on every new 'shoot' message
+            // triggered on every new 'shoot' message
+
             if (dataType == 'shoot') {
-              // console.log('somebody shot');
 
               // find who sent the 'move' update        
               let ID = dataJson['id'];    
@@ -821,7 +794,6 @@ function reset(roomName) {
   });
 
   console.log(bullets[roomName]);
-
 
 }
 
@@ -961,6 +933,7 @@ function update_room_status(roomName) {
     let num_alive = alive.length;
 
     if (num_alive == 1) {
+
       // we have a winner 🎉 -> move to post-match
       status['match_running'] = false;
       status['match_over'] = true;
@@ -993,11 +966,10 @@ function update_room_status(roomName) {
         // time to move to pre-match
 
         status['match_over'] = false; 
-        console.log('Pre-match!');       
+        console.log('Pre-match!\n');       
 
         // reset 'hit' players
-        reset(roomName);
-        
+        reset(roomName);        
 
         send_pre_match(roomName);
 
@@ -1309,7 +1281,7 @@ function run_physics(roomName){
       Object.values(players).forEach(p => {
         if (collide_PXB(p, b) && !p['hit']){
         // if (collide_PXB(p, b)){
-          console.log(p.name + 'got hit!');
+          console.log(p.name, 'got hit!\n');
           p.hit = true;
           add = false;
           send_player_hit(p['id'], roomName);
