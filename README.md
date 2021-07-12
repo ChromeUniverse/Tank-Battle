@@ -1,15 +1,15 @@
 # Tank Battle!
 
-A (soon to be real-time multiplayer) tank combat game made with [p5.js](https://p5js.org/).
+A real-time multiplayer tank combat game made with rooms, match-making and thrilling battles!
 
 This project was made solely for educational purposes.
 
 ## Gallery
 
-![image](https://media.discordapp.net/attachments/760252264723644426/837088289374732378/unknown.png?width=1271&height=632)
+![image](https://media.discordapp.net/attachments/760252264723644426/837088289374732378/unknown.png?width=800&height=400)
 
 
-## At a glimpse
+## General Info
 
 _Coming soon_
 
@@ -40,13 +40,14 @@ _Coming soon_
 * Explosion animations!
   * Appear on Player x Bullet, Bullet x Bullet collisions and after bullets have bounced on surfaces a set number of times
 * First functional online multiplayer
+ * Spawn points
+ * Implemented a functional matchmaking system
 
 ## Todo
 * Add websockets and multiplayer features
-  * Improve bars and fix bugs
-  * Remove bullet lists on player exit
-  * Send turret aiming angle on shoot event
-  * Add spawn points and obstacle containers
+  * Improve bars and fix bugs  
+  * Fix spawn point bugs
+  * Add obstacle containers
 * Implement lag-minimizing measures
   * Client-side prediction
   * Server reconciliation
