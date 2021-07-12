@@ -45,7 +45,7 @@ function letters_digits(str) {
 
 // "Redirecting" GET requests to '/'
 app.get('/', (req, res) => {
-  console('Got request!');
+
   res.status(200);
   res.sendFile('index.html');
 })
