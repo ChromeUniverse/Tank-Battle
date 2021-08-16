@@ -1,0 +1,156 @@
+body {
+  background-color: rgb(38, 38, 61);
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.buttons {
+  display: flex;    
+  /* width:100%; */
+  flex-direction: row;
+  justify-content: center;
+  /* background-color: tomato; */
+}
+
+.header {
+  font-size: 45px;
+}
+
+.form-input {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.line {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* background-color: chartreuse; */
+  width: 600px;
+  font-size: 30px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+/* form stuff */
+
+.label {
+  /* width: 10px; */
+  color: white;
+  /* background-color: crimson; */
+}
+
+.welcome {
+  font-size: 20px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.alert-msg {
+  margin: 10px;
+  font-size: 20px;
+  color: orange;
+}
+
+.input {
+  height: 35px;
+  width: 300px;
+
+  font-size: 22px;  
+  vertical-align: center;
+  background-color: rgb(46, 63, 105);
+  border: 0px;
+  border-radius: 5px;
+  color: white;
+  padding-left: 8px;
+}
+
+
+/* button */
+
+.send-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  height: 100px;
+  width: 100%;
+}
+
+button {
+  height: 60px;
+  width: 150px;
+  margin: 10px;
+
+  font-size: 25px;
+  background-color: rgb(93, 93, 199);
+  border: 0px;
+  border-radius: 9px;
+  color:white;
+}
+
+::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;  
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #F4F1DE; 
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #838070; 
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.rooms-list {
+  background-color: #32324d;
+  max-height: 400px;
+  overflow-y: scroll;
+  width: 600px;
+  padding-top: 30px;
+  padding-bottom: 20px;
+  border-radius: 10px;
+  
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+.room-name {
+
+  width: 500px;
+  background-color: #45456d;
+  border-radius: 10px;
+  padding-right: 15px;
+  margin: 10px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+}
+
+.room-name p{
+  font-size: 30px;
+  padding-left: 20px;
+  /* margin: 10px; */
+}
