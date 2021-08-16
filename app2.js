@@ -127,39 +127,36 @@ function private(req, res, next) {
         return;
     }
 
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+
     // verify token
-    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, userObject) => {
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
+
+
 
         // console.log('Decoded user object:', userObject);
 
         // if (err) return res.sendStatus(403);
 
-        // const sql = 'select id from users where username = ?';
+        const sql = 'select id from users where username = ?';
 
-        // app.db.execute(sql, [userObject.username], (results, fields, e) => {
+        const [results, fields, e] = await app.db.execute(sql, [userObject.username]);
+
+        // console.log('private request query', results);
 
         //     console.log('Got here!');
 
-        //     if (results.length > 0) {
+        if (results.length > 0) {
 
-        //         req.user = userObject; 
-        //         return next();  
-    
-        //     } else {
-        //         return res.sendStatus(403);
-        //     }
+            req.user = userObject; 
+            return next();  
 
-        // });   
-        
-        
-        if (err) {
-            // console.log('Error while decoding')
-            return res.sendStatus(403);
+        } else {
+            return res.status(403).send(fs.readFileSync(path_to_htmls + '403.html', 'UTF-8').toString());
         }
 
-        req.user = userObject;
-        
-        return next();
+        // });   
+                    
         
     });
 }
@@ -646,6 +643,13 @@ app.use(function (req, res) {
     res.status(404).send(fs.readFileSync(path_to_htmls + '404.html').toString());
 });
 
+app.use(function (req, res) {
+    res.status(401).send(fs.readFileSync(path_to_htmls + '401.html').toString());
+});
+
+app.use(function (req, res) {
+    res.status(403).send(fs.readFileSync(path_to_htmls + '403.html').toString());
+});
 
 // app.on('listening', ()=>{});
 
