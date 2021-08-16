@@ -10,7 +10,7 @@ console.log("\n[ START ]".green,`[ Websockets server started on port ${portNumbe
 // containers
 let sockets = {};       // websockets
 let rooms = {};         // rooms, room state and player data
-let rooms_status = {};
+let rooms_status = {};  // rooms metadata
 let bullets = {};       // rooms and bullets
 let obstacles = {};     // rooms and obstacles
 
@@ -327,33 +327,36 @@ class Obstacle {
 }
 
 
+function createObstables(room_name) {
+  // creating obstacles
+  obstacles[room_name] = [];
+  let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(200, 300, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(200, 400, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(300, 400, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(400, 400, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(500, 400, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
 
-// creating obstacles
-obstacles['testroom'] = [];
-let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(200, 300, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(200, 400, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(300, 400, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(400, 400, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(500, 400, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
+  box = new Obstacle(500, 50, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
 
-box = new Obstacle(500, 50, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
+  box = new Obstacle(800, 400, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(800, 300, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(800, 200, 200, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(900, 150, 100, 50, '#7a7a7a');
+  obstacles[room_name].push(box);
+}
 
-box = new Obstacle(800, 400, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(800, 300, 100, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(800, 200, 200, 100, '#7a7a7a');
-obstacles['testroom'].push(box);
-box = new Obstacle(900, 150, 100, 50, '#7a7a7a');
-obstacles['testroom'].push(box);
+
 
 
 
@@ -425,8 +428,8 @@ wss.on("connection", ws => {
         // let newPlayerY = spawn_point[1];
 
         let newPlayerAngle = dataJson['angle'];
-        // let roomName = dataJson['room'];        
-        let roomName = 'testroom';
+        let roomName = dataJson['room'];        
+        // let roomName = 'testroom';
 
         // // add new player to player list
         // let newPlayerEntry = {
@@ -491,6 +494,8 @@ wss.on("connection", ws => {
           rooms[roomName] = {}
           let room = rooms[roomName];
           room[newPlayerID] = newPlayerEntry;   
+
+          createObstables(roomName);
 
           // log new player
           console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
@@ -597,7 +602,29 @@ wss.on("connection", ws => {
         }  
         
                
-      }        
+      }     
+
+      // get rooms
+      if (dataType == "get-rooms") {
+
+        console.log('Got rooms list request');
+
+        // create list of room objects to send
+        let rooms_list = Object.keys(rooms_status).map(room_name => {
+          return { name: room_name }
+        });
+
+        // send list of rooms to client
+        ws.send(
+          JSON.stringify(
+            {
+              type: "rooms-list",
+              rooms_list: rooms_list
+            }
+          )
+        );
+
+      }
 
       let roomName = dataJson['room'];
 
