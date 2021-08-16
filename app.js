@@ -44,11 +44,47 @@ function letters_digits(str) {
 
 
 // "Redirecting" GET requests to '/'
-app.get('/', (req, res) => {
+// app.get('/', (req, res) => {
 
-  res.status(200);
-  res.sendFile('index.html');
-})
+//   res.status(200);
+//   res.sendFile('index.html');
+// })
+
+
+const path_to_htmls = __dirname + '/static/html/'
+
+// routes 
+app.get('/*', (req,res) => {  
+  console.log(req.url);
+
+  let req_endpoint = req.url.substr(1);
+
+  // get request to / -> serve index page
+  if (req.url == '/') {
+    let page = fs.readFileSync(path_to_htmls + 'index.html', 'UTF-8').toString();
+    res.status(200);
+    res.send(page);
+    return;
+  } 
+  
+  else {
+    try {
+      let page = fs.readFileSync(path_to_htmls + req_endpoint + '.html', 'UTF-8').toString();
+      res.status(200);
+      res.send(page);
+      return;
+    } 
+
+    catch (err) {
+      let page = fs.readFileSync(path_to_htmls + '404.html', 'UTF-8').toString();
+      res.status(404);
+      res.send(page);
+      return;
+    }
+  }
+
+});
+
 
 // POST request to /
 app.post('/', (req, res) => {
@@ -82,7 +118,8 @@ app.post('/', (req, res) => {
 
   // replacing USERNAME, COLOR, ROOM with actual player name and random color
   res.status(200);
-  let data = fs.readFileSync(__dirname + '/static/room.html');
+  // res.redirect(301, 'http://yourotherdomain.com' + req.path)
+  let data = fs.readFileSync(__dirname + '/static/html/room.html');
   res.send(data.toString().replace('USERNAME', username).replace('COLOR', playerColor));
   return;
   
