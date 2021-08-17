@@ -12,7 +12,6 @@ const validator = require('validator');
 
 
 // set up Express and middleware
-
 const app = express();
 
 var cookieParser = require('cookie-parser')
@@ -26,39 +25,18 @@ app.use(cors(
 app.use(express.static('public'));
 app.use(express.json());
 
-// fs
-const path_to_htmls = __dirname + '/private/html/';
-
-
-
-// mysql functions
-
-async function dbConnect () {
-    mysql.createConnection({
-        host     : 'localhost',
-        user     : 'lucca',
-        password : process.env.MYSQL_PASSWORD, 
-        database : 'tank_battle'
-    });
-}
-
-
-
- 
-// const api = require('./router1');
-// app.use('/api/', api);
-
 const port = 4000;
 
-let refreshTokens = [];
 
 
 
-
+// fs
+const path_to_htmls = __dirname + '/private/html/';
 
 function getHTML(name){
     return fs.readFileSync(path_to_htmls + 'name', 'UTF-8').toString();
 }
+
 
 
 
@@ -84,26 +62,6 @@ async function hash(input) {
     console.log('Hashed', input, 'to', hash, '\n');
     return hash;
 }
-
-
-// function authenticateToken(req, res, next) { 
-//     const authHeader = req.headers['authorization'];
-    
-//     let token;
-
-//     // got auth header -> get token
-//     if (authHeader !== undefined) { token = authHeader.split(' ')[1]; } 
-
-//     // no auth header -> send regular page
-//     else { return [401, req, res]; }
-
-//     // verify token
-//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-//         if (err) return [403, req, res];
-//         req.user = user; 
-//         return [200, req, res]      
-//     });
-// }
 
 
 function private(req, res, next) {   
@@ -132,32 +90,25 @@ function private(req, res, next) {
     // verify token
     jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
 
-
-
-        // console.log('Decoded user object:', userObject);
-
-        // if (err) return res.sendStatus(403);
+        // error while verifying
+        if (err) {            
+            return res.status(403).send(fs.readFileSync(path_to_htmls + '403.html', 'UTF-8').toString());
+        }
 
         const sql = 'select id from users where username = ?';
 
         const [results, fields, e] = await app.db.execute(sql, [userObject.username]);
 
-        // console.log('private request query', results);
-
-        //     console.log('Got here!');
-
         if (results.length > 0) {
-
+            // user exists
             req.user = userObject; 
             return next();  
 
         } else {
+            // user doesn't exist
             return res.status(403).send(fs.readFileSync(path_to_htmls + '403.html', 'UTF-8').toString());
         }
-
-        // });   
-                    
-        
+                            
     });
 }
 
@@ -167,11 +118,6 @@ function redirectUser(req, res, next) {
 
     console.log('Here is cookies:', req.cookies);
 
-    // got auth header -> get token
-    // const authHeader = req.headers['authorization'];
-    // if (authHeader !== undefined) { accessToken = authHeader.split(' ')[1]; } 
-    // else { return res.sendStatus(401); }    // no auth header -> send regular page
-
     if (req.cookies.token !== undefined) {
         accessToken = req.cookies.token
     } 
@@ -179,16 +125,32 @@ function redirectUser(req, res, next) {
         return next();
     }
 
-    // verify token
-    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
 
-        req.user = user;
-        if (err) {
-            // console.log('Error while decoding')
-            return res.sendStatus(403);
+    // verify token
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
+
+        // error while verifying
+        if (err) {            
+            return res.status(403).send(fs.readFileSync(path_to_htmls + '403.html', 'UTF-8').toString());
         }
+
+        req.user = userObject;
+
+        const sql = 'select id from users where username = ?';
+
+        const [results, fields, e] = await app.db.execute(sql, [userObject.username]);
         
-        return res.redirect('/');
+        if (results.length > 0) {
+            // user exists
+            // req.user = userObject; 
+            return res.redirect('/');
+
+        } else {
+            // user doesn't exist
+            // return res.status(403).send(fs.readFileSync(path_to_htmls + '403.html', 'UTF-8').toString());
+            return next();
+        }
+
     });
 }
 
@@ -452,7 +414,7 @@ app.post('/signup', async (req, res) => {
 
             // fetch data from database
 
-            const sql2 = 'select username, id, tank_color from username=?';    
+            const sql2 = 'select username, id, tank_color from users where username=?';    
             const [query_result2, fields2, err2] = await app.db.execute(sql2, [username]);            
 
             const q = query_result2[0];
