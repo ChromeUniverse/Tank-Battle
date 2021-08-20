@@ -87,7 +87,7 @@ body {
 
 button {
   height: 60px;
-  width: 150px;
+  width: 180px;
   margin: 10px;
 
   font-size: 25px;
@@ -154,3 +154,53 @@ button {
   padding-left: 20px;
   /* margin: 10px; */
 }
+
+.lb-list {
+  width: 600px;
+  display: flex;
+  flex-direction: column;  
+  background-color: #32324d;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+#lb-list-header {
+  background-color: rgb(46, 63, 105);
+  border-radius: 10px;
+}
+
+#name-header, #elo-header, #rank-header {
+  font-size: 20px;
+}
+
+.lb-line {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  /* background-color: green; */
+  margin-top: 5px;
+  margin-bottom: 5px;
+  /* margin: 5px ; */
+  /* padding: 5px; */
+  justify-content:space-between;
+}
+
+.lb-line-user {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: rgb(114, 114, 175);
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  /* margin: 5px ; */
+  /* padding: 5px; */
+  justify-content:space-between;
+}
+
+.name, .elo, .rank {
+  width: 200px;
+  /* padding: 5px; */
+  /* background-color: grey; */
+}
+
