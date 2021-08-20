@@ -40,13 +40,21 @@ async function index_api_main() {
     msg.innerText = "Welcome, " + name + '!';
 
     const btn1 = document.getElementById("btn1");
-    btn1.innerText = "User Page";
+    btn1.innerText = "Leaderboard";
+    document.getElementById("link1").href="/lb";
 
     const btn2 = document.getElementById("btn2");
-    btn2.innerText = "Logout"; 
+    btn2.innerText = "User Page"; 
+    document.getElementById("link2").href="/user";
 
-    document.getElementById("link1").href="/user";
-    document.getElementById("link2").href="/logout";
+    const btn_list = document.getElementById("btn-list");
+
+    const lb_btn = document.createElement('a');
+    lb_btn.href = '/logout';
+    lb_btn.innerHTML = '<button>Logout</button>';    
+
+    btn_list.appendChild(lb_btn);
+
 
     // websockets server address
     const server = 'localhost';
