@@ -13,6 +13,7 @@
 
   <title>Tank Battle!</title>
 </head>
+
 <body>
   <p class="header"><b>Tank Battle!</b></p>
 
@@ -23,8 +24,28 @@
 
   <h2>Leaderboard</h2>
 
-  <p class="alert-msg" id="msg">Leaderboard coming soon!</p>
+  <!-- <p class="alert-msg" id="msg">Leaderboard coming soon!</p> -->
+  <p class="alert-msg" id="alert-msg"></p>
 
+  <!-- <table id="lb-table">
+		<tr>
+			<td class="sender_cell">SERVER</td>
+			<td class="code_cell">00000000</td>
+			<td class="message_cell">Chat Starts Here</td>
+		</tr>
+	</table> -->
+
+  <div id="lb-list" class="lb-list">
+    <div id="lb-list-header" class="lb-line">
+      <p id="name-header" class="name">NAME</p>
+      <p id="elo-header"  class="elo">ELO</p>
+      <p id="rank-header" class="rank">RANK</p>      
+    </div>  
+  </div>
+
+  <a href="/"><button>Back</button></a>
+
+  <script src="/js/auth/lb-api.js"></script>
 
 </body>
 </html>
