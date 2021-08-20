@@ -213,6 +213,9 @@ app.get('/logout', private, (req, res)=> {
 });
 
 
+
+// API GET requests
+
 app.get('/api/*', private, async (req, res) => {
 
     // const db = app.db;
@@ -283,23 +286,65 @@ app.get('/api/*', private, async (req, res) => {
 
     }
 
-    if (endpoint == 'leaderboard') {
-        const lb = {
-            lb: [
-                {username: 'Lucca', elo: 2000},
-                {username: 'superjp64', elo: 1700},
-                {username: 'qrno', elo: 1600},
-                {username: 'Rachel', elo: 1500},
-                {username: 'Ben Awad', elo: 1400},
-                {username: 'Tim Dodd', elo: 1300},
-            ]
+    if (endpoint == 'lb') {
+
+        const name = JSON.parse(atob(req.token.split('.')[1])).username.toString();
+        // const name = 'qrno';
+
+        // sorting by descending lb_rank
+
+        const sql = "SELECT username, elo, lb_rank FROM users ORDER BY lb_rank ASC;";
+
+        try {
+            const [query_result, fields, err] = await app.db.execute(sql, [name]);
+
+            if (query_result.length > 0) {
+
+                console.log(query_result);
+                console.log(err);                
+
+                res.status(200);
+                res.json({lb: query_result}); 
+                return;
+
+            } else {
+                console.log('LEADERBOARD ERROR');
+
+                res.status(500);
+                res.json({
+                    error: true,
+                    message: 'User not found'
+                });
+                return;
+
+            }
+
+
+            
         }
 
-        res.status(200);
-        res.json(userData);
+        catch (e) { 
+            res.status(500);
+            res.json({
+                error: true,
+                message: 'Server Error'
+            });
+            console.error(e);
+            return;
+        }
+    }
+
+    else {
+        res.status(404);
+        res.send({
+            error: true,
+            message: 'API endpoint nonexistent.'
+        });
         return;
     }
 }); 
+
+
 
 
 // handle POST requests
@@ -364,6 +409,16 @@ app.post('/signup', async (req, res) => {
         const sql2 = "select email from users where email=?";
         const [query_result2, fields2, err2] = await app.db.execute(sql2, [email]);
 
+        const sql3 = "SELECT Count(*) FROM users;";
+        const [query_result3, fields3, err3] = await app.db.execute(sql3);
+        
+        // const num_users = query_result3['Count(*)'];
+
+        const num_users = Object.values(query_result3[0])[0];
+
+        console.log('Here is db query for count:', query_result3);
+        console.log('Here is number of users:', num_users);
+
         if (query_result1.length > 0) {
 
             // username already exists
@@ -410,7 +465,7 @@ app.post('/signup', async (req, res) => {
                 `insert into users (username, hashed_password, email, elo, tank_color, lb_rank) 
                 values (?, ?, ?, ?, ?, ?);`;    
                 
-            const [query_result1, fields1, err1] = await app.db.execute(sql1, [username, hashedPassword, email, 1000, '#' + Math.floor(Math.random()*(2**24)).toString(16).padStart(6, '0'), 0]);            
+            const [query_result1, fields1, err1] = await app.db.execute(sql1, [username, hashedPassword, email, 1000, '#' + Math.floor(Math.random()*(2**24)).toString(16).padStart(6, '0'), num_users + 1]);            
 
             // fetch data from database
 
@@ -451,7 +506,6 @@ app.post('/signup', async (req, res) => {
         return;
     }
 });
-
 
 
 app.post('/login', async (req, res) => {
@@ -577,6 +631,7 @@ app.post('/login', async (req, res) => {
 });
 
 
+// Send logged-in users to room
 
 app.get('/play/*', private, (req, res) => {
 
