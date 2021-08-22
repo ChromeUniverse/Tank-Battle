@@ -2,6 +2,8 @@
 
 This is the main reference guide for _Tank Battle!_'s websockets server code.
 
+This is where all the game logic is handled.
+
 ## Table of Contents
 
 _WIP_
@@ -96,9 +98,9 @@ player1_entry = {
 
 _WIP_
 
-Stores information about currently open websockets.
+Stores information about currently open websockets. 
 
-An object with player IDs as keys and [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket)s as values.
+An object with player IDs as keys and [WebSocket](https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket)s as values. When the sockets are closed, their respective entry is removed from this object.
 
 
 ```js
@@ -114,9 +116,9 @@ sockets = {
 
 _WIP_
 
-Stores metadata about rooms.
+Stores metadata about rooms. This information is used to determine if a given room is in a _pre-match_, _match running_ or _post-match_ state.
 
-An object with room names as keys and _room status objects_ as values.
+The metadata is stored in an object with room names as keys and _room status objects_ as values.
 
 ```js
 rooms_status = {
@@ -147,7 +149,95 @@ _Todo_
 
 ### Obstacles
 
-_Todo_
+_WIP_
+
+Stores information about all obstacles in all rooms.
+
+An object with room names as keys and an array of _Obstacles_ as values. 
+
+```js
+
+obstacles = {
+  'room1' = [obstacleArray1],
+  'room2' = [obstacleArray2],
+  'room3' = [obstacleArray3],
+  ...
+}
+
+```
+
+#### Obstacle arrays
+
+Stores information about all obstacles in a specific room
+
+```js
+obstacleArray1 = [
+  obstacle1,
+  obstacle2,
+  obstacle3,
+  obstacle4,
+  ...
+]
+```
+
+#### Obstacle class
+
+In _Tank Battle!_, Obstacles are a class that represent solid boxes over which the player cannot traverse, similarly to the map's walls. Bullets also ricochet after coming into contact with one of obstacle's edges.
+
+The Obstacle class is pretty simple.
+
+A new Obstacle instance can be instantiated like so:
+
+```js
+let newbox = new Obstacle(200, 200, 100, 100, '#7a7a7a');
+```
+
+Its constructor requires 5 arguments: 
+  * **x** - the x coordinate of the new obstacle's top-left corner
+  * **y** - the y coordinate of the new obstacle's top-left corner
+  * **w** - the new obstacle's width
+  * **h** - the new obstacle's height
+  * **col** - the new obstacle's color (in hex)
+
+The class also has 4 simple methods for returning the edges of an obstacle.
+
+Full source:
+
+```js
+class Obstacle {
+  constructor(x, y, w, h, col) {
+    this.x = x;                       // int      top-left corner x coordinate
+    this.y = y;                       // int      top-left corner y coordinate
+    this.w = w;                       // int      obstacle width
+    this.h = h;                       // int      obstacle height
+    this.col = col;                   // string   obstacle color (hex)
+  }
+
+  // get edges
+  top() {return this.y}               // returns: int   top edge y coordinate
+  left() {return this.x}              // returns: int   top edge y coordinate
+  bottom() {return this.y + this.h;}  // returns: int   bottom edge y coordinate
+  right() {return this.x + this.w;}   // returns: int   right edge x coordinate
+
+}
+```
+
+When a new room is created, the `createObstacles` function is called to create a new entry for a specific room in the obstacles containers and add a common set of obstacles to the room. 
+
+```js
+
+// Creates new Obstacle list for a given room
+
+function createObstables(room_name) {
+  obstacles[room_name] = [];
+  let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  box = new Obstacle(200, 300, 100, 100, '#7a7a7a');
+  obstacles[room_name].push(box);
+  ...
+}
+
+```
 
 ### Spectators
 
