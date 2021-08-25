@@ -18,5 +18,7 @@
 
 7. Websockets server code refactoring **WIP**
 
+	* HIGH PRIORITY: Only allow a player to join one single room once!!!
+
 8. Add documentation
 
