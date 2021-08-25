@@ -10,10 +10,18 @@ _WIP_
 
 * [Containers](#containers)
   * [Rooms and Players](#rooms-and-players)
+    * [Room objects](#Room-objects)
+    * [Player entry objects](#Player-entry-objects)
   * [Sockets](#sockets)
   * [Room Status](#room-status)
+    * [Room status objects](#Room-status-objects)
   * [Bullets](#bullets)
+    * [Room bullet objects](#Room-bullet-objects)
+    * [Player Bullet Arrays](#Player-Bullet-Arrays)
+    * [Bullet objects](#Bullet-objects)
   * [Obstacles](#obstacles)
+    * [Obstacle arrays](#Obstacle-arrays)
+    * [Obstacle class](#Obstacle-class)
   * [Spectators](#spectators)
 * [Websockets message exchange model](#websockets-message-exchange-model)
 * [Collision functions](#collision-functions)
@@ -88,7 +96,7 @@ player1_entry = {
   angle: 1.0303768265243125,  // float      current angle of player's tank with respect to map (radians)
   aim: 0.8960553845713439,    // float      current angle of player's turrent with respect to map (radians)
   room: 'room1',              // string     name of room in which player is currently in
-  shots: [],                  // array      ?
+  shots: [bulletArray],       // array      list of bullets shot by the player (more on this later)
   reloading : true,           // boolean    player is reloading or not
   cooldown : false            // boolean    player is experiencing weapon cooldown or not
 }
@@ -145,7 +153,70 @@ roomStatusObject1 = {
 
 ### Bullets
 
-_Todo_
+Stores information about bullets.
+
+An object with room names as keys and _room bullet objects_ as values.
+
+```js
+bullets = {
+  'room1': {room1_BulletsObject},
+  'room2': {room2_BulletsObject},
+  'room2': {room3_BulletsObject},
+  ...
+}
+```
+
+#### Room bullet objects
+
+Stores information about bullets in a specific room.
+
+An object with player IDs as keys and _player bullet arrays_ as values.
+
+```js
+room1_BulletsObject = {
+  'f6759586f1a3': [player1_BulletArray],
+  '5b6fd779e7ee': [player2_BulletArray],
+  '372dd9b624af': [player3_BulletArray],
+  ...
+}
+```
+
+#### Player Bullet Arrays
+
+Stores information about bullets shot by a specific player.
+
+An array comprised of _bullet objects_.
+
+This array exists both in the [main bullets container](#bullets) as well as the [player object](#Player-entry-objects)'s "shots" property.  
+
+```js
+player1_BulletArray = [
+  bullet1,
+  bullet2,
+  bullet4,
+  ...
+]
+```
+
+#### Bullet objects
+
+Describes information about a specific bullet.
+
+When a new bullet is added to the main `bullets` container, `bullet-explode` and `send-aim` events are sent to all clients in the room.
+
+```js
+bullet1 = {                        
+  id: 'f6759586f1a3',         // string   id of player who shot bullet
+  name: 'Lucca',              // string   name of player who shot bullet
+  color: '#123456',           // string   color of player who shot bullet (hex)
+  x: 123,                     // int      current x coordinate of bullet
+  y: 567,                     // int      current y coordinate of bullet
+  time: Date.now(),           // int      time when the bullet was shot (Date timestamp)
+  aim: -0.8960553845713439,   // int      angle of bullet's velocity vector with respect to map (radians)
+  bounces: 2,                 // int      number of times that bullet has ricocheted off obstacles or walls
+};
+
+```
 
 ### Obstacles
 
