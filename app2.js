@@ -1,10 +1,8 @@
 // module imports
 require('dotenv').config();
 const express = require('express');
-
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-// const mysql = require('mysql2');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const atob = require('atob');
@@ -84,8 +82,6 @@ function private(req, res, next) {
             .send(fs.readFileSync(path_to_htmls + '401.html', 'UTF-8').toString());         
         return;
     }
-
-    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
     // verify token
     jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
@@ -521,7 +517,7 @@ app.post('/login', async (req, res) => {
 
     try {
 
-        const sql = "select id, username, hashed_password, tank_color from users where username=?";
+        const sql = "SELECT id, username, hashed_password, tank_color FROM users WHERE username=?";
 
         const [query_result, fields, err] = await app.db.execute(sql, [username]);
 
@@ -539,8 +535,8 @@ app.post('/login', async (req, res) => {
             //     tank_color: 16711935
             //   }
 
-            console.log('Trying to authenticate user', username, 'with password', password);        
-            console.log('Correct password is', q.hashed_password);
+            // console.log('Trying to authenticate user', username, 'with password', password);        
+            // console.log('Correct password is', q.hashed_password);
                         
             const match = await bcrypt.compare(password, q.hashed_password);                    
 
@@ -593,27 +589,6 @@ app.post('/login', async (req, res) => {
             return;
 
         }
-
-
-        if (username != 'Lucca' || password != '123') {
-            console.log('Wrong Credentials');
-            return res.status(403).send('Wrong credentials!');
-        }
-    
-        // send jwt access token
-    
-        const user = { username: username, userID: 123456, tankColor: '#123456' };
-        const accessToken = generateAccessToken(user);
-        
-        // const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
-        // refreshTokens.push(refreshToken);
-    
-        res
-            // .status(200)
-            .cookie('token', accessToken, {httpOnly: true})
-            // .redirect(302, '/');
-            .send();
-        return;
 
     }
 
@@ -668,7 +643,7 @@ app.use(function (req, res) {
     res.status(403).send(fs.readFileSync(path_to_htmls + '403.html').toString());
 });
 
-// app.on('listening', ()=>{});
+
 
 
 // Start server
