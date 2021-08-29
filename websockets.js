@@ -467,169 +467,191 @@ wss.on("connection", ws => {
         //   cooldown : false
         // }
 
+        console.log('Here is online players list', online, '\n');
 
-
-        // creating new rooms status entry if it doesn't already exist
-        if (!rooms_status.hasOwnProperty(roomName)){
+        // check if player is already in a room
+        if (online.includes(newPlayerName)) { 
           
-          // room status entry doesn't exist
-          console.log('[ NEW ROOM STATUS ENTRY ]'.cyan, '[ In room:', roomName.cyan, ']\n');
-
-          rooms_status[roomName] = {
-            create_time: Date.now(),            
-            last_login_time: Date.now(),
-            num_players: 1,
-            match_running: false,
-            match_start_time: -1,
-            match_over: false,
-            match_finish_time: -1,
-          };          
-
-          // LOG - creating new room
-          rooms[roomName] = {}
-          let room = rooms[roomName];
-          console.log('[ NEW ROOM ]'.cyan, '[ Creating room:', roomName.cyan, ']\n');      
+          console.log("[ WARNING ]".yellow, '[ Player', newPlayerName.yellow , 'attempted to join', roomName.yellow , 'but was already in another room', ']\n');
           
-          // get spawn position
-          let spawn_point = spawn_points[0];
-          let newPlayerX = spawn_point[0];
-          let newPlayerY = spawn_point[1];
 
-          // create new player object
-          let newPlayerEntry = {
-            id: newPlayerID.toString(),
-            name: newPlayerName.toString(),
-            color: newPlayerColor.toString(),
-            hit: false,
-            spawn: spawn_point,
-            x: newPlayerX,
-            y: newPlayerY,
-            angle: newPlayerAngle,
-            aim: 0,
-            room: roomName,   
-            shots: [],       
-            reloading : false,
-            cooldown : false
-          }
+          ws.send(JSON.stringify(
+            {
+              type: "error",
+              message: 'You are already playing in another room.'
+            })
+          );
 
-          // push new player to online players list
-          online.push(newPlayerName);
-          console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
-
-          // Adding new player to newly created room        
-          room[newPlayerID] = newPlayerEntry;   
-
-          createObstables(roomName);
-
-          // log new player
-          console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
-
-          // creating new bullet list entry for room
-          console.log('[ NEW BULLET LIST ]'.cyan, '[ In room:', roomName.cyan, ']\n');
-          bullets[roomName] = {};          
-          let bullet_list = bullets[roomName];
-          bullet_list[newPlayerID] = [];
-
-          // LOG out room status entry
-          console.log("[ ROOMS STATUS ]".magenta, "\n", rooms_status, '\n');
-
+          delete sockets.newPlayerID;
+          
+          ws.close();
+          
         } else {
-          // room status entry already exists
 
-          let status = rooms_status[roomName];
+          console.log('player name', newPlayerName, 'not found in online player list\n');
 
-          // check to see if room is full
-          if (status['num_players'] < max_players) {
-
-            // only let player join the room during pre-match
-
-            if (!status['match_running'] && !status['match_over']) {
-
-              status['num_players'] += 1;
-              status['last_login_time'] = Date.now();
-
-              console.log("[ PLAYERS LIST ]".magenta, "\n", rooms, '\n');
-              console.log("[ BULLETS LIST ]".magenta, "\n", bullets, '\n');
-              console.log("[ ROOMS STATUS ]".magenta, "\n", rooms_status, '\n');
-
-              // update rooms
-
-              let spawn_point = spawn_points[status['num_players']-1];
-              let newPlayerX = spawn_point[0];
-              let newPlayerY = spawn_point[1];
-
-              // add new player to player list
-              let newPlayerEntry = {
-                id: newPlayerID.toString(),
-                name: newPlayerName.toString(),
-                color: newPlayerColor.toString(),
-                hit: false,
-                spawn: spawn_point,
-                x: newPlayerX,
-                y: newPlayerY,
-                angle: newPlayerAngle,
-                aim: 0,
-                room: roomName,   
-                shots: [],       
-                reloading : false,
-                cooldown : false
-              }
-
-              // push new player to online players list
-              online.push(newPlayerName);
-              console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
+          // player can join room
+          // creating new rooms status entry if it doesn't already exist
+          if (!rooms_status.hasOwnProperty(roomName)){
             
-              // add new player entry to room
-              let room = rooms[roomName];
-              room[newPlayerID] = newPlayerEntry;
+            // room status entry doesn't exist
+            console.log('[ NEW ROOM STATUS ENTRY ]'.cyan, '[ In room:', roomName.cyan, ']\n');
 
-              // log new player
-              console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
+            rooms_status[roomName] = {
+              create_time: Date.now(),            
+              last_login_time: Date.now(),
+              num_players: 1,
+              match_running: false,
+              match_start_time: -1,
+              match_over: false,
+              match_finish_time: -1,
+            };          
 
+            // LOG - creating new room
+            rooms[roomName] = {}
+            let room = rooms[roomName];
+            console.log('[ NEW ROOM ]'.cyan, '[ Creating room:', roomName.cyan, ']\n');      
+            
+            // get spawn position
+            let spawn_point = spawn_points[0];
+            let newPlayerX = spawn_point[0];
+            let newPlayerY = spawn_point[1];
 
-              // update bullets
-              let bullet_list = bullets[roomName];
-              bullet_list[newPlayerID] = [];
-
-
-              // sending data to all clients in room
-
-              Object.keys(room).forEach(id => {
-                let client = sockets[id];
-                if (client.readyState === WebSocket.OPEN) {
-                  // building JSON
-                  let message = JSON.stringify(
-                    {
-                      type: 'new-player',
-                      id: newPlayerID.toString(),
-                      name: newPlayerName.toString(),
-                      color: newPlayerColor.toString(),
-                      x: newPlayerX,
-                      y: newPlayerY,  
-                      angle: newPlayerAngle,
-                      shots: 0,
-                    }
-                  )
-                  // send JSON
-                  client.send(message);
-                }
-              });        
-
-              // send ID to newly logged in user
-              send_set_room(newPlayerID, roomName); 
-
+            // create new player object
+            let newPlayerEntry = {
+              id: newPlayerID.toString(),
+              name: newPlayerName.toString(),
+              color: newPlayerColor.toString(),
+              hit: false,
+              spawn: spawn_point,
+              x: newPlayerX,
+              y: newPlayerY,
+              angle: newPlayerAngle,
+              aim: 0,
+              room: roomName,   
+              shots: [],       
+              reloading : false,
+              cooldown : false
             }
 
-            
+            // push new player to online players list
+            online.push(newPlayerName);
+            console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
+
+            // Adding new player to newly created room        
+            room[newPlayerID] = newPlayerEntry;   
+
+            createObstables(roomName);
+
+            // log new player
+            console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
+
+            // creating new bullet list entry for room
+            console.log('[ NEW BULLET LIST ]'.cyan, '[ In room:', roomName.cyan, ']\n');
+            bullets[roomName] = {};          
+            let bullet_list = bullets[roomName];
+            bullet_list[newPlayerID] = [];
+
+            // LOG out room status entry
+            console.log("[ ROOMS STATUS ]".magenta, "\n", rooms_status, '\n');
 
           } else {
-            // room is full!
-            console.log('[ ROOM FULL ]'.red, '[ Client attempted to enter full room ]', '\n');
-          }
+            // room status entry already exists
 
-        }  
-        
-               
+            let status = rooms_status[roomName];
+
+            // check to see if room is full
+            if (status['num_players'] < max_players) {
+
+              // only let player join the room during pre-match
+
+              if (!status['match_running'] && !status['match_over']) {
+
+                status['num_players'] += 1;
+                status['last_login_time'] = Date.now();
+
+                console.log("[ PLAYERS LIST ]".magenta, "\n", rooms, '\n');
+                console.log("[ BULLETS LIST ]".magenta, "\n", bullets, '\n');
+                console.log("[ ROOMS STATUS ]".magenta, "\n", rooms_status, '\n');
+
+                // update rooms
+
+                let spawn_point = spawn_points[status['num_players']-1];
+                let newPlayerX = spawn_point[0];
+                let newPlayerY = spawn_point[1];
+
+                // add new player to player list
+                let newPlayerEntry = {
+                  id: newPlayerID.toString(),
+                  name: newPlayerName.toString(),
+                  color: newPlayerColor.toString(),
+                  hit: false,
+                  spawn: spawn_point,
+                  x: newPlayerX,
+                  y: newPlayerY,
+                  angle: newPlayerAngle,
+                  aim: 0,
+                  room: roomName,   
+                  shots: [],       
+                  reloading : false,
+                  cooldown : false
+                }
+
+                // push new player to online players list
+                online.push(newPlayerName);
+                console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
+              
+                // add new player entry to room
+                let room = rooms[roomName];
+                room[newPlayerID] = newPlayerEntry;
+
+                // log new player
+                console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
+
+
+                // update bullets
+                let bullet_list = bullets[roomName];
+                bullet_list[newPlayerID] = [];
+
+
+                // sending data to all clients in room
+
+                Object.keys(room).forEach(id => {
+                  let client = sockets[id];
+                  if (client.readyState === WebSocket.OPEN) {
+                    // building JSON
+                    let message = JSON.stringify(
+                      {
+                        type: 'new-player',
+                        id: newPlayerID.toString(),
+                        name: newPlayerName.toString(),
+                        color: newPlayerColor.toString(),
+                        x: newPlayerX,
+                        y: newPlayerY,  
+                        angle: newPlayerAngle,
+                        shots: 0,
+                      }
+                    )
+                    // send JSON
+                    client.send(message);
+                  }
+                });        
+
+                // send ID to newly logged in user
+                send_set_room(newPlayerID, roomName); 
+
+              }
+
+              
+
+            } else {
+              // room is full!
+              console.log('[ ROOM FULL ]'.red, '[ Client attempted to enter full room ]', '\n');
+            }
+
+          }  
+
+        }               
       }     
 
       // get rooms
@@ -651,6 +673,8 @@ wss.on("connection", ws => {
             }
           )
         );
+          
+        ws.close();
 
       }
 
@@ -1132,7 +1156,7 @@ function remove_player(removedID){
   rooms_status = new_rooms_status;
 
   // update online player list
-  online = online.filter(name => { return name == removed_player_name });
+  online = online.filter(name => name != removed_player_name );
   console.log('[ REMOVED FROM ONLINE LIST ]'.red, '[', removed_player_name.red ,']\n');
 
 
