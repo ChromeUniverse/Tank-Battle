@@ -7,12 +7,19 @@ let portNumber = 2848;
 const wss = new WebSocket.Server({ port : portNumber });
 console.log("\n[ START ]".green,`[ Websockets server started on port ${portNumber}]\n`);
 
+
+
 // containers
 let sockets = {};       // websockets
 let rooms = {};         // rooms, room state and player data
 let rooms_status = {};  // rooms metadata
 let bullets = {};       // rooms and bullets
 let obstacles = {};     // rooms and obstacles
+let online = [];        // list of online players
+let spectators = {};    // rooms and spectators
+
+
+
 
 // canvas properties
 const canvasW = 1200; 
@@ -24,7 +31,7 @@ const player_speed = 3;
 const rotation_speed = 3;
 
 // bullet properties
-const bullet_speed = 4;
+const bullet_speed = 7;
 const bullet_interval = 350;
 const bullet_diam = 15;
 const reload_interval = 2000;
@@ -37,8 +44,14 @@ const max_players = 6;
 const pre_match_time = 6;     
 const post_match_time = 6;    
 
+// number of game updates per second
+const update_rate = 50;
 
-// collision checking functions
+
+
+
+// <--------- Collision checking functions ---------->
+
 
 // player x player collision
 function collide_PXP(p1, p2) {
@@ -198,6 +211,7 @@ function collide_BXO(b, o) {
 // process 'shoot' events
 function shoot(p, aim) {
 
+  // only runs if player isn't dead
   if (!p['hit']) {
 
     let roomName = p['room']
@@ -209,7 +223,7 @@ function shoot(p, aim) {
       // only add new bullet after [bullet_interval] milliseconds have passed
       let last_time = list[list.length-1]['time'];
 
-      // timeout after three shots to "reload"
+      // timeout after max number of shots to "reload"
       if (list.length == max_shots) {           
         
         p['reloading'] = true;
@@ -224,6 +238,8 @@ function shoot(p, aim) {
         }        
         
       } else {
+
+        // add new bullet
 
         if ( Date.now() - last_time > bullet_interval ) {
           p['reloading'] = false;
@@ -327,6 +343,10 @@ class Obstacle {
 }
 
 
+
+
+// Creates new Obstacle list for a given room
+
 function createObstables(room_name) {
   // creating obstacles
   obstacles[room_name] = [];
@@ -363,7 +383,7 @@ function createObstables(room_name) {
 
 // player spawn locations
 
-let spawn_points = [ 
+const spawn_points = [ 
   [ 100, 100 ], 
   [ 250, 550 ], 
   [ 350, 350 ], 
@@ -465,7 +485,9 @@ wss.on("connection", ws => {
             match_finish_time: -1,
           };          
 
-          // creating new room
+          // LOG - creating new room
+          rooms[roomName] = {}
+          let room = rooms[roomName];
           console.log('[ NEW ROOM ]'.cyan, '[ Creating room:', roomName.cyan, ']\n');      
           
           // get spawn position
@@ -473,7 +495,7 @@ wss.on("connection", ws => {
           let newPlayerX = spawn_point[0];
           let newPlayerY = spawn_point[1];
 
-          // add new player to player list
+          // create new player object
           let newPlayerEntry = {
             id: newPlayerID.toString(),
             name: newPlayerName.toString(),
@@ -490,9 +512,11 @@ wss.on("connection", ws => {
             cooldown : false
           }
 
+          // push new player to online players list
+          online.push(newPlayerName);
+          console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
 
-          rooms[roomName] = {}
-          let room = rooms[roomName];
+          // Adding new player to newly created room        
           room[newPlayerID] = newPlayerEntry;   
 
           createObstables(roomName);
@@ -500,13 +524,13 @@ wss.on("connection", ws => {
           // log new player
           console.log("[ NEW USER ]".cyan, "[", [newPlayerID, newPlayerName, newPlayerColor, newPlayerX, newPlayerY, roomName], ']\n');
 
-
           // creating new bullet list entry for room
           console.log('[ NEW BULLET LIST ]'.cyan, '[ In room:', roomName.cyan, ']\n');
           bullets[roomName] = {};          
           let bullet_list = bullets[roomName];
           bullet_list[newPlayerID] = [];
 
+          // LOG out room status entry
           console.log("[ ROOMS STATUS ]".magenta, "\n", rooms_status, '\n');
 
         } else {
@@ -550,8 +574,12 @@ wss.on("connection", ws => {
                 reloading : false,
                 cooldown : false
               }
-            
 
+              // push new player to online players list
+              online.push(newPlayerName);
+              console.log('[ PUSHED TO ONLINE LIST ]'.red, '[', newPlayerName.red ,']\n');
+            
+              // add new player entry to room
               let room = rooms[roomName];
               room[newPlayerID] = newPlayerEntry;
 
@@ -772,17 +800,21 @@ wss.on("connection", ws => {
       // remove connection from sockets list
       // ...
       // update socket list
-      let new_sockets = {};        
+      let new_sockets = {};   
+      
+      let targetID;
+
       Object.keys(sockets).forEach(id => {
         let socket = sockets[id];
         // removing timed out connections
         if (socket != ws) {
           new_sockets[id] = socket;
         } else {          
-          remove_player(id);
+          remove_player(id);          
         }
       });
-      sockets = new_sockets;
+
+      sockets = new_sockets;      
 		});
 	}
 );
@@ -932,6 +964,9 @@ function get_alive(roomName){
 }
 
 
+
+// gets name of room and updates room status
+
 function update_room_status(roomName) {
 
   /*
@@ -1020,7 +1055,7 @@ function remove_player(removedID){
   let removed_player_room_name = '';
   let removed_player_name = '';
 
-  // finding timed out player
+  // finding timed out player  
   Object.keys(rooms).forEach(roomName => {
     let is_done = false;
 
@@ -1096,7 +1131,9 @@ function remove_player(removedID){
   // update rooms_status
   rooms_status = new_rooms_status;
 
-
+  // update online player list
+  online = online.filter(name => { return name == removed_player_name });
+  console.log('[ REMOVED FROM ONLINE LIST ]'.red, '[', removed_player_name.red ,']\n');
 
 
   // alert everybody in the room
@@ -1126,6 +1163,9 @@ function remove_player(removedID){
   
 }
 
+
+
+// send tank turret aim
 function send_aim(p, aim, roomName) {
   let room = rooms[roomName];
 
@@ -1155,6 +1195,7 @@ function send_aim(p, aim, roomName) {
 }
 
 
+// send player-hit event to all in room
 function send_player_hit(hit_id, roomName){
 
   let room = rooms[roomName];
@@ -1186,6 +1227,8 @@ function send_player_hit(hit_id, roomName){
 
 }
 
+
+// send bullet-explode event to all in room
 function send_bullet_explode(b, roomName){
 
   let room = rooms[roomName];
@@ -1215,7 +1258,8 @@ function send_bullet_explode(b, roomName){
 
 }
 
-// gets room name and returns corresponding room object
+
+// gets room name and returns corresponding room object with sensitive data removed
 function getRoom(roomName) {
 
   let room = rooms[roomName];
@@ -1241,12 +1285,12 @@ function getRoom(roomName) {
 }
 
 
-
+// runs all "physical" interactions between players, bullets and obstacles
 function run_physics(roomName){
-
-  let room_bullets = bullets[roomName];
-  let players = rooms[roomName];
-  let box_list = obstacles[roomName];
+  
+  let room_bullets = bullets[roomName];     // getting bullet list
+  let players = rooms[roomName];            // getting player list
+  let box_list = obstacles[roomName];       // getting player list
 
   Object.keys(room_bullets).forEach(id => {
 
@@ -1364,10 +1408,10 @@ function getBullets(roomName) {
   return bullets_to_send;
 }
 
-// send room state to all clients every [interval] milliseconds
-var update_rate = 100;
 
-var interval1 = 1000/update_rate;
+
+// send room state to all clients every [interval] milliseconds
+const interval1 = 1000/update_rate;
 setInterval(() => {
 
   // iterating through rooms
