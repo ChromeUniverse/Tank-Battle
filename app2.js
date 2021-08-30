@@ -623,9 +623,9 @@ app.get('/play/*', private, (req, res) => {
     let data = fs.readFileSync(path_to_htmls + 'room.html');
     res.send(
         data.toString()
-            .replace('USERNAME', accessToken.username)
-            .replace('COLOR', accessToken.tankColor)
-            .replace('ROOMNAME', endpoint)
+            .replace('$USERNAME', accessToken.username)
+            .replace('$COLOR', accessToken.tankColor)
+            .replace('$ROOMNAME', endpoint)
     );
     return;
 });
