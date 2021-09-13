@@ -8,7 +8,7 @@ const { get_db } = require('../sql_util');
 const router = express.Router();
 router.use(private);
 
-// GET /user -> returns user information
+// GET /user    --> returns user information
 router.get('/user', async (req, res) => {
   
   const db = get_db(); 
@@ -70,7 +70,7 @@ router.get('/user', async (req, res) => {
 
 });
 
-// GET /lb -> returns leaderboard
+// GET /lb      --> returns leaderboard
 router.get('/lb', async (req, res) => {
 
   const db = get_db();
@@ -91,13 +91,13 @@ router.get('/lb', async (req, res) => {
       console.log(err);
 
       res.status(200);
-      res.json({ lb: query_result });
+      res.json({ error: false, lb: query_result });
       return;
 
     } else {
       console.log('LEADERBOARD ERROR');
 
-      res.status(500);
+      res.status(404);
       res.json({
         error: true,
         message: 'User not found'
@@ -116,6 +116,12 @@ router.get('/lb', async (req, res) => {
     return;
   }
 
+});
+
+// Get /secret  --> returns shenanigans
+router.get('/secret', async (req,res) => {
+  const text = "You're a sneaky one, aren't you? If you've managed to reach this endpoint, send me a DM to get a prize! Discord: Lucca hash-two-seven-four-four";
+  return res.status(418).json({error: false, message: text});
 });
 
 module.exports = router;
