@@ -81,16 +81,7 @@ let vel_vector = new p5.Vector.fromAngle(0, player_speed);
 console.log(vel_vector.heading() / (Math.PI/180));
 let user = new Player('', userName, userColor, false, userX, userY, vel_vector, []);
 
-
-
-// creating targets
-
-
-let targetID = 'qrno'
-let targetName = 'qrno';
-let targetColor = '#f28500';
-
-// creating obstacles
+// creating obstacles boxes
 
 let box = new Obstacle(200, 200, 100, 100, '#7a7a7a');
 obstacles.push(box);
@@ -150,9 +141,8 @@ ws.addEventListener("message", msg => {
     user.id = ID;
     players[ID] = user;
     // send login data
-    send_login();
-  }
-
+    send_spectate();
+  }  
 
   // set room
   if (dataType == 'set-room'){
@@ -346,9 +336,27 @@ function display_match_update() {
 
 
 
+// send spectator request data
+function send_spectate() {
+  ws.send(
+    JSON.stringify(
+      {
+        type: 'spectate',
+        id: user.id,
+        name: user.name,
+        color: user.col,
+        room: roomName
+      }
+    )
+  );
+}
 
 
-// send login data
+
+
+
+
+// send login request data
 function send_login() {
   ws.send(
     JSON.stringify(
