@@ -1,9 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { get_db } = require("../sql_util");
-const { readFile } = require('fs/promises');
-
-// fs
-const path_to_htmls = '/home/lucca/Documents/Programming/tank_battle/private/html/';
+const { getHTML } = require('../misc');
 
 // "redirectUser" middleware
 // -> redirects logged in users to home page
@@ -27,9 +24,8 @@ function redirectUser(req, res, next) {
   jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
 
     // error while verifying
-    if (err) {
-      const file = await readFile(path_to_htmls + '403.html', 'UTF-8');
-      return res.status(403).send(file.toString());
+    if (err) {      
+      return res.status(403).send(await getHTML('403.html'));
     }
 
     req.user = userObject;

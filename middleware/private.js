@@ -1,9 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { get_db } = require("../sql_util");
-const { readFile } = require('fs/promises');
-
-// fs
-const path_to_htmls = '/home/lucca/Documents/Programming/tank_battle/private/html/';
+const { getHTML } = require('../misc');
 
 // "private" middleware
 // -> only allows logged in users to access a specfic resource
@@ -24,18 +21,15 @@ async function private(req, res, next) {
     req.token = accessToken;
   }
   else {
-    const file = await readFile(path_to_htmls + '401.html', 'UTF-8');
-    res.status(401).send(file.toString());
-    return;
+    return res.status(401).send(await getHTML('401.html'));
   }
 
   // verify token
   jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, async (err, userObject) => {
 
     // error while verifying
-    if (err) {
-      const file = await readFile(path_to_htmls + '403.html', 'UTF-8');
-      return res.status(403).send(file.toString());
+    if (err) {      
+      return res.status(403).send(await getHTML('403.html'));
     }
 
     const sql = 'select id from users where username = ?';
@@ -48,9 +42,8 @@ async function private(req, res, next) {
       return next();
 
     } else {
-      // user doesn't exist
-      const file = await readFile(path_to_htmls + '403.html', 'UTF-8');
-      return res.status(403).send(file.toString());
+      // user doesn't exist      
+      return res.status(403).send(await getHTML('403.html'));
     }
 
   });
