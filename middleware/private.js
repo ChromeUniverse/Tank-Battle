@@ -1,4 +1,7 @@
+// Package imports
 const jwt = require('jsonwebtoken');
+
+// Custom module function imports
 const { get_db } = require("../sql_util");
 const { getHTML } = require('../misc');
 
