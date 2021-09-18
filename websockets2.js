@@ -1,35 +1,19 @@
-// module imports
+// package imports
 const WebSocket = require('ws');
 const colors = require('colors');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
-const atob = require('atob');
-const validator = require('validator');
 require('dotenv').config();
 
-const { get_inputs, get_players, get_rooms } = require('./ws_modules/ws_utils');
+// custom module imports
+const { get_players, get_rooms } = require('./ws_modules/ws_utils');
 const { add_input_to_queue, processInputs } = require('./ws_modules/inputs');
 const { get_rooms_list, remove_empty_rooms, add_spectator, remove_spectator, add_player, remove_player } = require('./ws_modules/rooms');
-
-
-function generateID() {
-  return Math.floor((1 + Math.random()) * 0x10000000000000).toString(16).substring(1)
-}
-
-
-// Creating new WS server
-let portNumber = 2000;
-const wss = new WebSocket.Server({ port: portNumber });
-
+const { send_game_state_to_clients } = require('./ws_modules/send_game_state');
+const { generateID } = require('./misc');
 
 // globals
-let game_tick = 0;
 const time_step = 50;    // time step in milliseconds
-const tick_step = 10;    // game tick step in milliseconds
-// let rooms = {};
-// let inputs = [];
-// let players = [];
 
 /*
 
@@ -72,6 +56,12 @@ rooms = {
 // Spectators -> receive 'stream' of game/room state updates
 // Players    -> specatators that are also able to send inputs to the server
 
+
+
+// Creating new WS server
+let portNumber = 2000;
+const wss = new WebSocket.Server({ port: portNumber });
+
 // Starting up server
 wss.on("listening", ws => {
   console.log("\n[ START ]".green, `[ Websockets server started on port ${portNumber}]\n`);
@@ -105,7 +95,6 @@ wss.on("connection", async (ws, request) => {
     try {
 
       let players = get_players();
-      let rooms = get_players();
 
       // parse out data
       let dataJson = JSON.parse(data);
@@ -179,51 +168,7 @@ wss.on("connection", async (ws, request) => {
 
 });
 
-function send_game_state_to_clients() {
-
-
-  let rooms = get_rooms();
-
-  // looping over rooms
-  for (const [roomName, roomObject] of Object.entries(rooms)) {
-
-    // preparing roomobject to send
-    let room_to_send = {};
-    
-    // list of clients
-    const clients = Object.values(roomObject.spectators);
-
-    let players = {};
-
-    // filtering out
-    for (const [id, p] of Object.entries(roomObject.players)) {
-      players[id] = { 
-        name: p.name,
-        color: p.color,
-        x: p.x, 
-        y: p.y, 
-        heading: p.heading, 
-        aim: p.aim 
-      }
-    };
-
-    room_to_send.players = players;
-
-    // sending room state to all clients in room
-    for (const client of clients) {
-      client.send(JSON.stringify(
-        { 
-          type: 'room-update',
-          room: room_to_send
-        } 
-      ));
-    }
-
-  }
-};
-
 setInterval(() => {
   processInputs();
   send_game_state_to_clients();
 }, time_step);
-
