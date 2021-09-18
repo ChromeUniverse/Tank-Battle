@@ -1,6 +1,6 @@
-# Tank Battle!
+# _Tank Battle!_
 
-A real-time multiplayer tank combat game made with rooms, match-making and thrilling battles!
+An online, real-time multiplayer tank combat game with thrilling battles, multiple game rooms, matchmaking, leaderboard rankings, and much more!
 
 This project was made solely for educational purposes.
 
