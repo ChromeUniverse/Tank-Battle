@@ -14,6 +14,14 @@ function no_whitespace(string) {
   return string.match(/^[^\s]+$/) !== null
 }
 
+// generate a long string of random hex chars
+function generateID() {
+  return Math.floor((1 + Math.random()) * 0x10000000000000).toString(16).substring(1)
+}
+
+// clamp number between two values
+function clamp(num, min, max) { return Math.min(Math.max(num, min), max); }
+
 // asynchronous bcrypt hashing function
 async function hash(input) {
   let salt = await bcrypt.genSalt(12);
@@ -34,4 +42,12 @@ async function getHTML(name){
   return file.toString();
 }
 
-module.exports = { is_alpha_num, no_whitespace, hash, generateAccessToken, getHTML }
+module.exports = { 
+  is_alpha_num, 
+  no_whitespace, 
+  hash, 
+  generateAccessToken, 
+  getHTML,
+  generateID,
+  clamp,
+}
