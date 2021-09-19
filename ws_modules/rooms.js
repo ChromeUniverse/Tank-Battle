@@ -1,6 +1,7 @@
-const { get_rooms, get_players } = require("./ws_utils");
+const { get_rooms, get_players, set_players } = require("./ws_utils");
+const { createObstables } = require('./obstacle');
 
-
+// sends JSON with a list of active rooms
 function get_rooms_list(ws) {
 
   let rooms = get_rooms();
@@ -25,7 +26,7 @@ function createRoom(roomname) {
     spectators: {},
     players: {},
     bullets: {},
-    map: [],
+    map: createObstables(),
   }
 
   rooms[roomname] = newroom;
@@ -85,7 +86,7 @@ function remove_player(ws) {
   let players = get_players();
 
   delete rooms[ws.room].players[ws.id];
-  players = players.filter(name => name != ws.name);
+  set_players(players.filter(name => name != ws.name));
 }
 
 module.exports = {
