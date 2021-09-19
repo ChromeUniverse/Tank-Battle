@@ -11,9 +11,10 @@ const { add_input_to_queue, processInputs } = require('./ws_modules/inputs');
 const { get_rooms_list, remove_empty_rooms, add_spectator, remove_spectator, add_player, remove_player } = require('./ws_modules/rooms');
 const { send_game_state_to_clients } = require('./ws_modules/send_game_state');
 const { generateID } = require('./misc');
+const { auth } = require('./auth');
 
 // globals
-const time_step = 50;    // time step in milliseconds
+const time_step = 10;    // time step in milliseconds
 
 /*
 
@@ -45,10 +46,20 @@ rooms = {
 
   '234567': {},
   '345678': {},
-  '456789': {},
-  '567890': {},
 }
+*/
 
+/*
+
+Custom ws props
+
+ws.name
+ws.userID
+ws.id
+ws.x
+ws.y
+ws.heading
+ws.aim
 
 */
 
@@ -69,6 +80,9 @@ wss.on("listening", ws => {
 
 // Main Websockets Logic
 wss.on("connection", async (ws, request) => {
+
+  // authenticate incoming websocket connection
+  // auth(request);
 
   const token = request.headers.cookie.split('=')[1];
   let decoded;
@@ -94,8 +108,6 @@ wss.on("connection", async (ws, request) => {
 
     try {
 
-      let players = get_players();
-
       // parse out data
       let dataJson = JSON.parse(data);
       let dataType = dataJson["type"];
@@ -109,14 +121,15 @@ wss.on("connection", async (ws, request) => {
       }
 
       // add ws as player
-      else if (dataType == "play" && ws.type == 'spectator' && !players.includes(ws.name)) {
+      else if (dataType == "play" && ws.type == 'spectator' && !get_players().includes(ws.name)) {
         ws.room = dataJson.room;
         ws.type = 'player';
         add_player(ws);
+        console.log('Adding player....')
       }
 
-      else if (dataType == "play" && ws.type == 'spectator' && players.includes(ws.name)) {
-        console.log('\n', ws.name.red, 'attempted to play in two rooms at once!', '\n');
+      else if (dataType == "play" && ws.type == 'spectator' && get_players().includes(ws.name)) {
+        console.log('\n', ws.name.red, 'attempted to play in two rooms at once!', '\n', get_players(), '\n');
       }
 
       // handle player input
