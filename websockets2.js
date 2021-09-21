@@ -141,6 +141,8 @@ wss.on("connection", async (ws, request) => {
       // rooms list request
       else if (dataType == "get-rooms") { get_rooms_list(ws); }
 
+      else if (dataType == "get-name") { ws.send( JSON.stringify( { type: 'set-name', name: ws.name } ))}
+
       // invalid data type -> force close
       else {
         console.log('No condition satisfied!', 'Type:', ws.type);
