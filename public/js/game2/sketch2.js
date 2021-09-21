@@ -124,10 +124,8 @@ ws.addEventListener("message", msg => {
     players = dataJson.players;
     bullets = dataJson.bullets;
 
-    console.log(bullets);
-
     for (const p of Object.values(players)) {
-      if ( p.name = local.name ) {
+      if ( p.name == local.name ) {
         local.x = p.x;
         local.y = p.y;
         local.heading = p.heading;
