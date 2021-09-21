@@ -10,11 +10,11 @@ function add_input_to_queue(ws, dataJson) {
   let inputs = get_inputs();
 
   console.log(dataJson);
-  console.log(dataJson.keystrokes);
 
   const input = {
     p: ws,
     keys: dataJson.keys,
+    aim: dataJson.aim,
     timestamp: Date.now(),
   };
 
@@ -36,24 +36,26 @@ function processInputs() {
     
     // get keystrokes and p
     const keys = input.keys;
+    const aim = input.aim;
+    console.log('Here is the aim:', aim);
     const p = input.p;
 
     // apply inputs
     if (keys.includes('w')) {
       p.x += player_speed * Math.cos(p.heading);
-      p.y -= player_speed * Math.sin(p.heading);
+      p.y += player_speed * Math.sin(p.heading);
     }
     if (keys.includes('a')) {
-      p.heading += rotation_speed;
+      p.heading -= rotation_speed;
     }
     if (keys.includes('s')) {
-      p.x -= player_speed * Math.cos(p.heading);
+      p.x += player_speed * Math.cos(p.heading);
       p.y += player_speed * Math.sin(p.heading);
     }
     if (keys.includes('d')) {
-      p.heading -= rotation_speed;
+      p.heading += rotation_speed;
     }
-    if (keys.includes('z')) { shoot(p) }
+    if (keys.includes('z')) { shoot(p, aim) }
 
     // clamp player X, Y coords to map borders
 
