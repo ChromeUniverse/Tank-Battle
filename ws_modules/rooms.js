@@ -25,7 +25,7 @@ function createRoom(roomname) {
     meta: {},
     spectators: {},
     players: {},
-    bullets: {},
+    bullets: [],
     map: createObstables(),
   }
 
