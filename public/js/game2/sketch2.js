@@ -45,9 +45,17 @@ const port = 2000;
 
 // containers
 let players = {};
-let bullets = {};
+let bullets = [];
 let obstacles = [];
-let animations = []
+let animations = [];
+
+let local = {
+  name: 'name', 
+  x: 0,
+  y: 0,
+  heading: 0,
+  aim: 0,
+}
 
 // const roomName = 'testroom';
 
@@ -98,6 +106,7 @@ const ws = new WebSocket('ws://' + server + ':' + port.toString());
 ws.addEventListener("open", () => {
   console.log("Connected to WS Server!",'@', server, port);  
   send_spectate();
+  get_name();
 });
 
 
@@ -105,11 +114,33 @@ ws.addEventListener("open", () => {
 ws.addEventListener("message", msg => {
   const dataJson = JSON.parse(msg.data);
   const type = dataJson['type'];
+
+  if (type == 'set-name') {
+    console.log('Got name!', dataJson.name);
+    local.name = dataJson.name;
+  }
   
   if (type == 'room-update') {
-    players = dataJson.room.players;
+    players = dataJson.players;
+    bullets = dataJson.bullets;
+
+    console.log(bullets);
+
+    for (const p of Object.values(players)) {
+      if ( p.name = local.name ) {
+        local.x = p.x;
+        local.y = p.y;
+        local.heading = p.heading;
+      }
+    }
   }
 });
+
+
+function get_aim() {
+  const aim = createVector(mouseX-local.x, mouseY-local.y); 
+  return aim.heading();
+}
 
 // send 'spectate rooms' request
 function send_spectate()  { ws.send( JSON.stringify( { type: 'spectate', room: roomName } )); }
@@ -117,17 +148,21 @@ function send_spectate()  { ws.send( JSON.stringify( { type: 'spectate', room: r
 // send 'join room' request
 function send_joinroom()  { ws.send( JSON.stringify( { type: 'play', room: roomName }     )); }
 
+function get_name()       { ws.send( JSON.stringify( { type: 'get-name' } )); }
+
 // send user input
-function send_input(keys) { 
-  ws.send( JSON.stringify( { type: 'input', keys: keys }   )); 
-  console.log('sent keys!')
+function send_input(keys, aim) { 
+  ws.send( JSON.stringify( { type: 'input', keys: keys, aim: aim } )); 
+  console.log('sent keys!');
 }
 
 // process keypresses
 function keys() {
 
-  let pressed = false;
   let keystrokes = '';
+  let pressed = false;
+  let shoot = false;
+  let aim = 0;
   
   // w or up 
   if (keyIsDown(87) || keyIsDown(UP_ARROW)) { 
@@ -150,11 +185,13 @@ function keys() {
     pressed = true;
   }
   // mouse click or enter
-  if (mouseIsPressed || keyIsDown(13)) {
-    keystrokes += 'z'; pressed = true;
+  if (mouseIsPressed || keyIsDown(13)) {    
+    keystrokes += 'z';
+    aim = get_aim();
+    pressed = true;
   }
   
-  if (pressed) send_input(keystrokes);
+  if (pressed) send_input(keystrokes, aim);
 }
 
 /*
@@ -177,9 +214,18 @@ function drawPlayer(p) {
   // fill(p.color);
   // circle(p.x, p.y, 2 * hit_radius);
 
+  // highlight user with a thin dark border
+  if (p.name == local.name) {
+    strokeWeight(5);
+    stroke('#2a27b5');            
+    fill(0,0,0,0);
+    circle(p.x, p.y, 80);  
+    p.aim = get_aim();
+  } 
+
   push();
   translate(p.x, p.y);
-  rotate(-p.heading);
+  rotate(p.heading);
   rectMode(CENTER);
 
   // tank treads
@@ -194,12 +240,12 @@ function drawPlayer(p) {
   fill(p.color);
   rect(0, 0, tankW, tankH, 5, 5);
 
-  fill('#FF0000')
+  fill('#FF0000');
   ellipse(0, 0, 5, 5);
-  rotate(+p.heading);
+  rotate(-p.heading);
 
   // tank cannon/barrel
-  rotate(+p.aim);
+  rotate(p.aim);
   fill(color(0));
   rect(20, 0, 30, 6);
   fill(color(130));
@@ -210,7 +256,7 @@ function drawPlayer(p) {
 
   // tank turret 
   strokeWeight(2);
-  rotate(-p.heading);
+  rotate(p.heading);
   fill(color(100));
   ellipse(0, 0, 25, 25);
   noStroke();
@@ -227,7 +273,7 @@ function drawPlayer(p) {
 }
 
 
-function display(players){
+function display_players(){
 
   // setting up render queue
   let render = Object.values(players);
@@ -243,6 +289,18 @@ function display(players){
 
 }
 
+function display_bullets(){
+
+  // setting up render queue
+
+  bullets.forEach(b => {
+    noStroke();
+    fill(b.color);
+    circle(b.x, b.y, bullet_diam);
+  });
+
+}
+
 function draw() {
   background(220);
 
@@ -253,5 +311,6 @@ function draw() {
     o.display();
   });
 
-  display(players)
+  display_players();
+  display_bullets();
 }
