@@ -16,8 +16,6 @@ async function postFormDataAsJson({ url, formData }) {
 	const response = await fetch(url, fetchOptions);
 	const res_data = await response.json();
 
-	let redirect = false;
-
 	console.log(response.status);
 	
 	return [response.status, res_data];
@@ -33,20 +31,16 @@ async function handleFormSubmit(event) {
 
 	const url = form.action;
 
-	// const alert_msg = document.getElementById('alert-msg');
-	// alert_msg.innerText = '';
-
 	try {
 		const formData = new FormData(form);
-		// console.log('Here is the form data\n', formData);
+
 		const [statusCode, json] = await postFormDataAsJson({ url, formData });		
 
-		if (statusCode == 200) { window.location.assign('/'); }		
-		else {
-
+		if (statusCode == 200) { 
+			window.location.assign('/'); 
+		}	else {
 			const alert_msg = document.getElementById('alert-msg');
 			alert_msg.innerText = json.message;
-			
 		}
 
 	} catch (error) {
