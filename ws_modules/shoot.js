@@ -1,5 +1,6 @@
 const { get_rooms } = require("./ws_utils");
-const { hit_radius, bullet_diam } = require("./constants");
+const { hit_radius, bullet_diam, max_shots, bullet_interval, reload_interval } = require("./constants");
+const { generateID } = require("../misc");
 
 // create new bullet 
 function shoot(player, aim) {
@@ -8,20 +9,39 @@ function shoot(player, aim) {
   let rooms = get_rooms();
   let room = rooms[player.room];
 
-  // new bullet object
-  let new_bullet = {
-    x: player.x + (hit_radius + bullet_diam/2) * Math.cos(aim),
-    y: player.y + (hit_radius + bullet_diam/2) * Math.sin(aim),
-    name: player.name,
-    color: player.color,
-    heading: aim
-  } 
+  if (!player.hit) {
 
-  console.log('New bullet headed to:', aim);
+    if (player.shots < max_shots) {
+      if (Date.now() - player.last_shot_time > bullet_interval) {
 
-  // push new bullet to list
-  room.bullets.push(new_bullet);
+        // new bullet object
+        let new_bullet = {
+          id: generateID(),
+          x: player.x + (hit_radius + bullet_diam / 2 + 1) * Math.cos(aim),
+          y: player.y + (hit_radius + bullet_diam / 2 + 1) * Math.sin(aim),
+          bounces: 0,
+          room: player.room,
+          name: player.name,
+          color: player.color,
+          heading: aim
+        }
 
+        // push new bullet to list
+        room.bullets.push(new_bullet);
+
+        // change player properties
+        player.shots += 1;
+        player.last_shot_time = Date.now();
+
+      }
+
+    } else {
+      if (Date.now() - player.last_shot_time > reload_interval ) {
+        player.shots = 0;
+        shoot(player, aim);
+      }
+    }
+  }
 }
 
 module.exports = { shoot }
