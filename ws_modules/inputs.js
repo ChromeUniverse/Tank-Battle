@@ -9,7 +9,7 @@ function add_input_to_queue(ws, dataJson) {
 
   let inputs = get_inputs();
 
-  console.log(dataJson);
+  // console.log(dataJson);
 
   const input = {
     p: ws,
@@ -33,41 +33,43 @@ function processInputs() {
 
     // pop first input object from 'inputs'
     const input = inputs.shift();
-    
+
     // get keystrokes and p
     const keys = input.keys;
     const aim = input.aim;
-    console.log('Here is the aim:', aim);
     const p = input.p;
 
-    // apply inputs
-    if (keys.includes('w')) {
-      p.x += player_speed * Math.cos(p.heading);
-      p.y += player_speed * Math.sin(p.heading);
-    }
-    if (keys.includes('a')) {
-      p.heading -= rotation_speed;
-    }
-    if (keys.includes('s')) {
-      p.x += player_speed * Math.cos(p.heading);
-      p.y += player_speed * Math.sin(p.heading);
-    }
-    if (keys.includes('d')) {
-      p.heading += rotation_speed;
-    }
-    if (keys.includes('z')) { shoot(p, aim) }
+    if (!p.hit) {
+      // apply inputs
+      if (keys.includes('w')) {
+        p.x += player_speed * Math.cos(p.heading);
+        p.y += player_speed * Math.sin(p.heading);
+      }
+      if (keys.includes('a')) {
+        p.heading -= rotation_speed;
+      }
+      if (keys.includes('s')) {
+        p.x -= player_speed * Math.cos(p.heading);
+        p.y -= player_speed * Math.sin(p.heading);
+      }
+      if (keys.includes('d')) {
+        p.heading += rotation_speed;
+      }
+      if (keys.includes('z')) { 
+        p.aim = aim;
+        shoot(p, aim); 
+      }
 
-    // clamp player X, Y coords to map borders
+      // clamp player X, Y coords to map borders
 
-    p.x = clamp(p.x, hit_radius, canvasW-hit_radius);
-    p.y = clamp(p.y, hit_radius, canvasH-hit_radius);
+      p.x = clamp(p.x, hit_radius, canvasW - hit_radius);
+      p.y = clamp(p.y, hit_radius, canvasH - hit_radius);
 
-    console.log(inputs.length, 'inputs remain');
+      // console.log(inputs.length, 'inputs remain');
+    }
 
-    // run all physical interactions
-    run_physics();
   }
-  
+
   // clear input queue
   inputs = [];
 }
