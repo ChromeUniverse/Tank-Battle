@@ -22,6 +22,12 @@ function generateID() {
 // clamp number between two values
 function clamp(num, min, max) { return Math.min(Math.max(num, min), max); }
 
+// reflect angle about x axis
+function reflect_x(angle) { return -angle; }
+
+// reflect angle about y axis
+function reflect_y(angle) { return Math.PI - angle; }
+
 // asynchronous bcrypt hashing function
 async function hash(input) {
   let salt = await bcrypt.genSalt(12);
@@ -50,4 +56,6 @@ module.exports = {
   getHTML,
   generateID,
   clamp,
+  reflect_x,
+  reflect_y
 }
