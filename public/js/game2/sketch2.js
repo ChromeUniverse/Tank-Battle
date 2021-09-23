@@ -132,6 +132,25 @@ ws.addEventListener("message", msg => {
       }
     }
   }
+
+  if (type == 'animation') {
+
+    let radius;
+    let duration;
+
+    if (dataJson.animation == 'player-explode') {
+      radius = explosion_radius;
+      duration = explosion_duration;
+    } 
+
+    if (dataJson.animation == 'bullet-explode') {
+      radius = bullet_explosion_radius;
+      duration = bullet_explosion_duration;
+    } 
+
+    animations.push(new explodeAnimation(dataJson.x, dataJson.y, radius, duration));
+  }
+
 });
 
 
@@ -234,8 +253,9 @@ function drawPlayer(p) {
   rect(0, -20, 50, 10, 2, 2);
 
   // tank body
-  noStroke();
-  fill(p.color);
+  if (p.hit) fill('#751f05')
+  else fill(p.color)
+
   rect(0, 0, tankW, tankH, 5, 5);
 
   fill('#FF0000');
@@ -311,4 +331,9 @@ function draw() {
 
   display_players();
   display_bullets();
+
+  animations.forEach(a => {
+    a.display();
+  });
+
 }
