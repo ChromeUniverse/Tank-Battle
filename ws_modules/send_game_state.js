@@ -23,7 +23,8 @@ function send_game_state_to_clients() {
         x: p.x, 
         y: p.y, 
         heading: p.heading, 
-        aim: p.aim 
+        aim: p.aim,
+        hit: p.hit
       }
     };
 
