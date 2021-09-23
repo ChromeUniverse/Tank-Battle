@@ -1,6 +1,7 @@
 const { get_rooms } = require("./ws_utils");
 const { hit_radius, bullet_diam, max_shots, bullet_interval, reload_interval } = require("./constants");
 const { generateID } = require("../misc");
+const { send_player_explode, send_bullet_explode } = require("./messages");
 
 // create new bullet 
 function shoot(player, aim) {
@@ -32,6 +33,9 @@ function shoot(player, aim) {
         // change player properties
         player.shots += 1;
         player.last_shot_time = Date.now();
+
+        // send bullet-explode 
+        send_bullet_explode(player.room, new_bullet.x, new_bullet.y)
 
       }
 
