@@ -12,9 +12,8 @@ const { get_rooms_list, remove_empty_rooms, add_spectator, remove_spectator, add
 const { send_game_state_to_clients } = require('./ws_modules/send_game_state');
 const { generateID } = require('./misc');
 const { auth } = require('./auth');
-
-// globals
-const time_step = 10;    // time step in milliseconds
+const { run_physics } = require('./ws_modules/physics');
+const { time_step } = require('./ws_modules/constants');
 
 /*
 
@@ -124,6 +123,9 @@ wss.on("connection", async (ws, request) => {
       else if (dataType == "play" && ws.type == 'spectator' && !get_players().includes(ws.name)) {
         ws.room = dataJson.room;
         ws.type = 'player';
+        ws.hit = false;
+        ws.shots = 0;
+        ws.last_shot_time = 0;
         add_player(ws);
         console.log('Adding player....')
       }
@@ -135,7 +137,7 @@ wss.on("connection", async (ws, request) => {
       // handle player input
       else if (dataType == "input" && ws.type == 'player') { 
         add_input_to_queue(ws, dataJson) 
-        console.log('Got input!');
+        // console.log('Got input!');
       }
 
       // rooms list request
@@ -145,8 +147,8 @@ wss.on("connection", async (ws, request) => {
 
       // invalid data type -> force close
       else {
-        console.log('No condition satisfied!', 'Type:', ws.type);
-        console.log(get_rooms());
+        // console.log('No condition satisfied!', 'Type:', ws.type);
+        // console.log(get_rooms());
       }
     }
     catch (err) {
@@ -185,5 +187,6 @@ wss.on("connection", async (ws, request) => {
 
 setInterval(() => {
   processInputs();
+  run_physics();
   send_game_state_to_clients();
 }, time_step);
