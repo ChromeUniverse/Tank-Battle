@@ -9,7 +9,7 @@ module.exports = Object.freeze({
   rotation_speed: 0.07,
 
   // bullet properties
-  bullet_speed: 7,
+  bullet_speed: 4,
   bullet_interval: 350,
   bullet_diam: 15,
   reload_interval: 2000,
@@ -23,5 +23,6 @@ module.exports = Object.freeze({
   post_match_time: 6,
 
   // number of game updates per second
-  update_rate: 50
+  update_rate: 50,
+  time_step: 10,    // time step in milliseconds
 })
