@@ -1,4 +1,4 @@
-const { get_inputs } = require("./ws_utils");
+const { get_inputs, get_rooms } = require("./ws_utils");
 const { run_physics } = require('./physics');
 const { clamp } = require("../misc");
 const { player_speed, rotation_speed, canvasW, canvasH, hit_radius } = require('./constants');
@@ -38,9 +38,12 @@ function processInputs() {
     const keys = input.keys;
     const aim = input.aim;
     const p = input.p;
+    const room_state = get_rooms()[p.room].meta.state;
 
-    if (!p.hit) {
-      // apply inputs
+
+    // apply inputs
+    if (!p.hit && room_state == 'playing') {
+      
       if (keys.includes('w')) {
         p.x += player_speed * Math.cos(p.heading);
         p.y += player_speed * Math.sin(p.heading);
