@@ -14,6 +14,7 @@ const { generateID } = require('./misc');
 const { auth } = require('./auth');
 const { run_physics } = require('./ws_modules/physics');
 const { time_step } = require('./ws_modules/constants');
+const { update_match_state } = require('./ws_modules/match-state');
 
 /*
 
@@ -121,12 +122,12 @@ wss.on("connection", async (ws, request) => {
 
       // add ws as player
       else if (dataType == "play" && ws.type == 'spectator' && !get_players().includes(ws.name)) {
-        ws.room = dataJson.room;
-        ws.type = 'player';
-        ws.hit = false;
-        ws.shots = 0;
-        ws.last_shot_time = 0;
-        add_player(ws);
+        // ws.room = dataJson.room;
+        // ws.type = 'player';
+        // ws.hit = false;
+        // ws.shots = 0;
+        // ws.last_shot_time = 0;
+        add_player(ws, dataJson.room);
         console.log('Adding player....')
       }
 
@@ -186,6 +187,7 @@ wss.on("connection", async (ws, request) => {
 });
 
 setInterval(() => {
+  update_match_state();
   processInputs();
   run_physics();
   send_game_state_to_clients();
