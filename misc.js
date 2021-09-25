@@ -28,6 +28,28 @@ function reflect_x(angle) { return -angle; }
 // reflect angle about y axis
 function reflect_y(angle) { return Math.PI - angle; }
 
+
+// Fisher-Yates shufflling algorithm - JS implementation courtesy of Mike Bostock
+// https://bost.ocks.org/mike/shuffle/
+
+function shuffle(array) {
+  var m = array.length, t, i;
+
+  // While there remain elements to shuffle…
+  while (m) {
+
+    // Pick a remaining element…
+    i = Math.floor(Math.random() * m--);
+
+    // And swap it with the current element.
+    t = array[m];
+    array[m] = array[i];
+    array[i] = t;
+  }
+
+  return array;
+}
+
 // asynchronous bcrypt hashing function
 async function hash(input) {
   let salt = await bcrypt.genSalt(12);
@@ -57,5 +79,6 @@ module.exports = {
   generateID,
   clamp,
   reflect_x,
-  reflect_y
+  reflect_y,
+  shuffle,
 }
