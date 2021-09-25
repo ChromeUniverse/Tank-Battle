@@ -36,6 +36,8 @@ const bullet_explosion_duration = 200;
 
 // websockets server address
 const server = 'localhost';
+// const server = '192.168.1.116';
+// const server = '18.229.196.24';
 // const server = '192.168.1.109';
 // const server = '34.200.98.64';
 // const server = '18.229.74.58';
@@ -48,6 +50,11 @@ let players = {};
 let bullets = [];
 let obstacles = [];
 let animations = [];
+let message = {
+  text: '',
+  duration: 0,
+  start_time: Date.now()
+};
 
 let local = {
   name: 'name', 
@@ -62,7 +69,6 @@ let local = {
 // in SECONDS!
 const pre_match_time = 6;     
 const post_match_time = 6;  
-
 
 
 /*
@@ -151,6 +157,82 @@ ws.addEventListener("message", msg => {
     animations.push(new explodeAnimation(dataJson.x, dataJson.y, radius, duration));
   }
 
+  if (type == 'match-update') {
+
+    let text = '';
+    let state = dataJson.state;
+
+    if (state == 'waiting') text = 'Waiting for players to join...';
+    if (state == 'pre-match') text = 'Match starting soon!';
+    if (state == 'playing') text = 'Go!';
+    if (state == 'post-match') text = 'Game over!';
+
+    const newmessage = {
+      text: text,
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+    console.log('Got State!', dataJson.state);
+  }
+
+  if (type == 'room-full') {
+    const newmessage = {
+      text: dataJson.message,
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+  }
+
+  if (type == 'match-in-progress') {
+    const newmessage = {
+      text: dataJson.message,
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+  }
+
+  if (type == 'time') {
+    const newmessage = {
+      text: dataJson.message,
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+    console.log(dataJson.message);
+  }
+
+  if (type == 'kill') {
+    
+    let text;
+
+    if (dataJson.dead_name == dataJson.killer_name) {
+      text = dataJson.dead_name + ' killed themselves!';
+    } else {
+      text = dataJson.killer_name + ' killed ' + dataJson.dead_name + ' !';
+    }
+
+    const newmessage = {
+      text: text,
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+    console.log(dataJson.message);
+  }
+
+  if (type == 'win') {
+    const newmessage = {
+      text: dataJson.winner_name + ' wins!',
+      duration: 1000,
+      start_time: Date.now(),
+    }
+    message = newmessage;
+    console.log(dataJson.message);
+  }
+
 });
 
 
@@ -178,7 +260,6 @@ function keys() {
 
   let keystrokes = '';
   let pressed = false;
-  let shoot = false;
   let aim = 0;
   
   // w or up 
@@ -226,6 +307,14 @@ function setup() {
 
 }
 
+function display_message(message){
+  if (Date.now() - message.start_time < message.duration) {
+    fill('#000000');
+    textSize(30);
+    textFont('Courier New');
+    text(message.text, canvasW/2, 45);
+  }
+}
 
 function drawPlayer(p) {
   // fill(p.color);
@@ -290,7 +379,6 @@ function drawPlayer(p) {
   text(p.name, p.x, p.y + tankH / 2 + 40);
 }
 
-
 function display_players(){
 
   // setting up render queue
@@ -335,5 +423,7 @@ function draw() {
   animations.forEach(a => {
     a.display();
   });
+
+  display_message(message);
 
 }
