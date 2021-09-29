@@ -1,5 +1,6 @@
 const { shuffle } = require("../misc");
 const { min_players, pre_match_time, post_match_time, spawn1, spawn2, spawn3, spawn4, spawn5, spawn6 } = require("./constants");
+const { update_ratings, update_ratings_in_room } = require("./elo");
 const { send_match_state, send_time, send_win } = require("./messages");
 const { get_num_players, get_num_players_alive } = require("./rooms");
 const { get_rooms } = require("./ws_utils")
@@ -65,8 +66,16 @@ function update_match_state(){
 
       // game over!
       roomObject.meta.state = 'post-match';
+
+      let p_winner = Object.values(roomObject.players).filter(p => !p.hit)[0];
+
+      p_winner.rank = 1;
+
+      roomObject.meta.winner = p_winner;
       roomObject.meta.last_update_time = Date.now();
       send_match_state(roomname);
+
+      update_ratings_in_room(roomObject.players);
     }
 
     // waiting in post-match for over 'post_match_time' seconds
@@ -84,7 +93,6 @@ function update_match_state(){
       roomObject.meta.spawns = shuffle([spawn1, spawn2, spawn3, spawn4, spawn5, spawn6]);
       // console.log('Fetching:', spawn_points);
       // console.log('Shhuffling:', shuffle(spawn_points));
-      console.log('Spawn locations after match end:', roomObject.meta.spawns);
 
       // reset players
       for (let player of Object.values(roomObject.players)) {
@@ -106,10 +114,8 @@ function update_match_state(){
 
     }
 
-    if ( state == 'post-match' && Date.now() - update > 1000 && Date.now() - update < 2000 ) {
-      let winner = Object.values(roomObject.players).filter(p => !p.hit)[0];
-      send_win(roomname, winner);
-      console.log(winner.name, 'wins!');
+    if ( state == 'post-match' && Date.now() - update > 1000 && Date.now() - update < 2000 ) {      
+      send_win(roomname, roomObject.meta.winner);
     }
 
   }
