@@ -18,8 +18,8 @@ function shoot(player, aim) {
         // new bullet object
         let new_bullet = {
           id: generateID(),
-          x: player.x + (hit_radius + bullet_diam / 2 + 1) * Math.cos(aim),
-          y: player.y + (hit_radius + bullet_diam / 2 + 1) * Math.sin(aim),
+          x: player.x + (hit_radius + bullet_diam / 2 + 3) * Math.cos(aim),
+          y: player.y + (hit_radius + bullet_diam / 2 + 3) * Math.sin(aim),
           bounces: 0,
           room: player.room,
           name: player.name,
