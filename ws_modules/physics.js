@@ -3,6 +3,7 @@ const { p_o_collide, b_o_collide, p_b_collide, b_b_collide, p_p_collide } = requ
 const { bullet_speed, bullet_diam, canvasW, canvasH, maxBounces } = require("./constants");
 const { clamp, reflect_x, reflect_y } = require("../misc");
 const { send_bullet_explode, send_player_explode, send_kill } = require("./messages");
+const { get_num_players_alive } = require("./rooms");
 
 function player_obstacle_collisions() {
   let rooms = get_rooms();
@@ -74,8 +75,15 @@ function player_bullet_collisions() {
       for (const bullet of bullets) {
         const collision = p_b_collide(player, bullet);
         if (collision) {
+          // player was killed!
           player.hit = true;
+
+          // remove bullet 
           room.bullets = bullets.filter(b => b.id != bullet.id);
+
+          player.rank = get_num_players_alive(roomname) + 1;
+
+          // send events
           send_player_explode(player.room, player.x, player.y);
           send_kill(roomname, {name: bullet.name, color: bullet.color}, player)
         }
