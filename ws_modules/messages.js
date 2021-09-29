@@ -82,9 +82,7 @@ function send_time(time,roomname) {
     type:'time',
     message: time.toString() + '...'
   };
-
-  console.log('Sending time!', time);
-
+  
   send_to_room(roomname, message);
 }
 

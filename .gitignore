@@ -1,2 +1,4 @@
 node_modules
 .env
+con.session.sql
+requests.rest

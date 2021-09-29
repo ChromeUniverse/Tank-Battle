@@ -3,6 +3,8 @@ require('dotenv').config();
 
 let db;
 
+
+// connect to MySQL database
 async function sql_connect() {
   // connect to database
   db = await mysql.createConnection({
@@ -15,11 +17,12 @@ async function sql_connect() {
   return db;
 }
 
-module.exports.sql_connect = sql_connect;
+// get database object
+function get_db() { return db; }
 
-function get_db() {return db}
-
-module.exports.get_db = get_db;
-
+module.exports = {
+  sql_connect,
+  get_db,
+}
 
   

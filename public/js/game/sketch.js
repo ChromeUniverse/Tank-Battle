@@ -40,6 +40,8 @@ const server = 'localhost';
 // const server = '34.200.98.64';
 // const server = '18.229.74.58';
 
+const port = 2000;
+
 
 // containers
 let players = {};
@@ -122,7 +124,7 @@ let update_start_time = 0;
 
 // new websocket connection
 
-const ws = new WebSocket('ws://' + server + ':2848');
+const ws = new WebSocket('ws://' + server + ':' + port.toString());
 
 // on connection
 ws.addEventListener("open", () => {
