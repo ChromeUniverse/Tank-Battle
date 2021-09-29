@@ -20,16 +20,20 @@ module.exports = Object.freeze({
   // game match properties
   min_players: 2,
   max_players: 6,
-  // in SECONDS!
-  pre_match_time: 6,
-  post_match_time: 6,
+  pre_match_time: 6,    // in SECONDS!
+  post_match_time: 6,   // in SECONDS!
 
+  // spawn points
   spawn1: [ 100, 100 ],
   spawn2: [ 250, 550 ], 
   spawn3: [ 350, 350 ], 
   spawn4: [ 700, 450 ],
   spawn5: [ 1100, 500 ],
   spawn6: [ 900, 100 ],  
+
+
+  // elo rating
+  k_factor: 32,
   
   // number of game updates per second
   update_rate: 50,
