@@ -3,6 +3,7 @@ const { createObstables } = require('./obstacle');
 const { spawn1, spawn2, spawn3, spawn4, spawn5, spawn6, max_players } = require("./constants");
 const { send_room_full, send_room_state_to_spectator, send_match_in_progress } = require("./messages");
 const { shuffle } = require("../misc");
+const { get_rating } = require("./elo");
 
 // sends JSON with a list of active rooms
 function get_rooms_list(ws) {
@@ -91,7 +92,7 @@ function remove_spectator(ws) {
 }
 
 // add/remove player logic
-function add_player(ws, roomname) {
+async function add_player(ws, roomname) {
   
   let players = get_players();
   let rooms = get_rooms();
@@ -116,18 +117,19 @@ function add_player(ws, roomname) {
       ws.last_shot_time = 0;
       ws.heading = 0;
       ws.aim = 0;
+      ws.rating = await get_rating(ws);
 
       // move player to spawn point
       // console.log(room.meta);
 
       // console.log('\nB4: Source of truth:', spawn_points);
-      console.log('B4: Room spawn list:', room.meta.spawns);
+      // console.log('B4: Room spawn list:', room.meta.spawns);
 
       let spawn_point = room.meta.spawns.shift(); // removes current spawn location from list
-      console.log('Here\'s spawn point:', spawn_point);
+      // console.log('Here\'s spawn point:', spawn_point);
 
       // console.log('\nAF: Source of truth:', spawn_points);
-      console.log('AF: Room spawn list:', room.meta.spawns);
+      // console.log('AF: Room spawn list:', room.meta.spawns);
 
       ws.spawn = spawn_point;
       ws.x = spawn_point[0];

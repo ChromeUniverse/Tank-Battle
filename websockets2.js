@@ -15,6 +15,7 @@ const { auth } = require('./auth');
 const { run_physics } = require('./ws_modules/physics');
 const { time_step } = require('./ws_modules/constants');
 const { update_match_state } = require('./ws_modules/match-state');
+const { sql_connect } = require('./sql_util');
 
 /*
 
@@ -74,7 +75,8 @@ let portNumber = 2000;
 const wss = new WebSocket.Server({ port: portNumber });
 
 // Starting up server
-wss.on("listening", ws => {
+wss.on("listening", async (ws) => {
+  await sql_connect();
   console.log("\n[ START ]".green, `[ Websockets server started on port ${portNumber}]\n`);
 });
 
@@ -127,7 +129,7 @@ wss.on("connection", async (ws, request) => {
         // ws.hit = false;
         // ws.shots = 0;
         // ws.last_shot_time = 0;
-        add_player(ws, dataJson.room);
+        await add_player(ws, dataJson.room);
         console.log('Adding player....')
       }
 
