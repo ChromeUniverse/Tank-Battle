@@ -54,7 +54,13 @@ function p_b_collide(p, b) {
   const deltaY = p.y - b.y;
   const dist = Math.hypot(deltaX, deltaY);
 
-  if (dist <= (hit_radius + bullet_diam/2) && !p.hit ) return true
+  if (dist <= (hit_radius + bullet_diam/2) && !p.hit ) {
+    console.log('\n Player', p.name, 'died!');
+    console.log('\n Player coords:', p.x, p.y);
+    console.log('\n Bullet coords:', b.x, b.y);
+    console.log('\n Distance:', dist, '<', hit_radius + bullet_diam/2);
+    return true;
+  }
   else return false;
 }
 
