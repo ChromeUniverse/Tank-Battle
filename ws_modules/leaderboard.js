@@ -1,4 +1,4 @@
-const { get_db, sql_connect } = require("../sql_util");
+const pool = require("../sql_util");
 
 function sort_players_by_rating(p1, p2) {
   if (p1.elo < p2.elo) return +1;
@@ -9,12 +9,9 @@ function sort_players_by_rating(p1, p2) {
 async function update_leaderboard(){
   
   // fetch list of players from database
-  // await sql_connect();
-
-  let db = get_db();
 
   const sql1 = 'SELECT username, elo, lb_rank from users';
-  const [players, fields] = await db.execute(sql1);
+  const [players, fields] = await pool.query(sql1);
 
   // const players = [
   //   { username: 'Lucca', elo: 1060, lb_rank: 1 },
@@ -39,7 +36,7 @@ async function update_leaderboard(){
 
   for (const p of players) {
     const sql = 'UPDATE users SET lb_rank = ? WHERE username = ?';
-    const [rows, fields] = await db.execute(sql, [p.lb_rank, p.username]);
+    const [rows, fields] = await pool.query(sql, [p.lb_rank, p.username]);
   }
 
   // console.log('Ranked list!', players);

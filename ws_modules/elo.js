@@ -1,4 +1,4 @@
-const { get_db } = require('../sql_util');
+const pool = require('../sql_util');
 const { k_factor } = require('./constants');
 const { update_leaderboard } = require('./leaderboard');
 
@@ -109,23 +109,15 @@ function new_ratings_alt(player1, player2){
 
 
 // fetch player's current rating from database
-async function get_rating(player) {
-  // get database object
-  let db = get_db();
-  
-  // perform query and return result
-  const [result, fields] = await db.execute('SELECT elo FROM users WHERE username = ?', [player.name]);
+async function get_rating(player) {  
+  const [result, fields] = await pool.query('SELECT elo FROM users WHERE username = ?', [player.name]);
   return result[0].elo;
 }
 
 // update player's current rating
 async function set_rating(player, newrating) {
-  let db = get_db();
-
   const sql = 'UPDATE users SET elo = ? WHERE username = ?'
-
-  const [query_result, fields, err] = await db.execute(sql, [newrating, player.name]);
-
+  const [query_result, fields, err] = await pool.query(sql, [newrating, player.name]);
 }
 
 function order(p1, p2) {

@@ -76,7 +76,6 @@ const wss = new WebSocket.Server({ port: portNumber });
 
 // Starting up server
 wss.on("listening", async (ws) => {
-  await sql_connect();
   console.log("\n[ START ]".green, `[ Websockets server started on port ${portNumber}]\n`);
 });
 
