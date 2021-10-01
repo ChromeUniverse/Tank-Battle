@@ -2,15 +2,13 @@
 const jwt = require('jsonwebtoken');
 
 // Custom module function imports
-const { get_db } = require("../sql_util");
+const pool = require("../sql_util");
 const { getHTML } = require('../misc');
 
 // "redirectUser" middleware
 // -> redirects logged in users to home page
 
 function redirectUser(req, res, next) {
-
-  const db = get_db();
 
   let accessToken;
 
@@ -35,7 +33,7 @@ function redirectUser(req, res, next) {
 
     const sql = 'select id from users where username = ?';
 
-    const [results, fields, e] = await db.execute(sql, [userObject.username]);
+    const [results, fields, e] = await pool.query(sql, [userObject.username]);
 
     if (results.length > 0) {
       // user exists

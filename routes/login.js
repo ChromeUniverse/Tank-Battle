@@ -2,11 +2,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 
-
 // Custom module function imports
 const { redirectUser } = require('../middleware/redirectUser');
 const { generateAccessToken, getHTML } = require('../misc');
-const { get_db } = require('../sql_util');
+const pool = require('../sql_util');
 
 // Express Router setup
 const router = express.Router();
@@ -26,8 +25,6 @@ router.get('/', async (req, res)=> {
 
 router.post('/', async (req, res) => {
 
-  const db = get_db();
-
   // parse JSON body 
   const username = req.body.username.toString();
   const password = req.body.password.toString();
@@ -40,7 +37,7 @@ router.post('/', async (req, res) => {
 
     const sql = "SELECT id, username, hashed_password, tank_color FROM users WHERE username=?";
 
-    const [query_result, fields, err] = await db.execute(sql, [username]);
+    const [query_result, fields, err] = await pool.query(sql, [username]);
 
     if (query_result.length > 0) {
 

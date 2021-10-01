@@ -6,7 +6,7 @@ const validator = require('validator');
 // Custom module function imports
 const { redirectUser } = require('../middleware/redirectUser');
 const { is_alpha_num, no_whitespace, hash, generateAccessToken, getHTML } = require('../misc');
-const { get_db } = require('../sql_util');
+const pool = require('../sql_util');
 
 // Express Router setup
 const router = express.Router();
@@ -25,8 +25,6 @@ router.get('/', async (req, res)=> {
 // 
 
 router.post('/', async (req, res) => {
-
-  const db = get_db();
 
   console.log('Got signup POST');
 
@@ -86,14 +84,14 @@ router.post('/', async (req, res) => {
 
     // sql queries - search for given username, email in db
     const sql1 = "SELECT username FROM users WHERE username=?";
-    const [query_result1, fields1, err1] = await db.execute(sql1, [username]);
+    const [query_result1, fields1, err1] = await pool.query(sql1, [username]);
 
     const sql2 = "SELECT email FROM users WHERE email=?";
-    const [query_result2, fields2, err2] = await db.execute(sql2, [email]);
+    const [query_result2, fields2, err2] = await pool.query(sql2, [email]);
 
     // sql query - get the number of users
     const sql3 = "SELECT Count(*) FROM users;";
-    const [query_result3, fields3, err3] = await db.execute(sql3);
+    const [query_result3, fields3, err3] = await pool.query(sql3);
     const num_users = Object.values(query_result3[0])[0];
 
     console.log('Here is db query for count:', query_result3);
@@ -146,7 +144,7 @@ router.post('/', async (req, res) => {
 
       // write new user data to db
       const sql1 = 'INSERT INTO users (username, hashed_password, email, elo, tank_color, lb_rank) VALUES (?, ?, ?, ?, ?, ?);';
-      const [query_result1, fields1, err1] = await db.execute(sql1, [username, hashedPassword, email, elo, tank_color, lb_rank]);
+      const [query_result1, fields1, err1] = await pool.query(sql1, [username, hashedPassword, email, elo, tank_color, lb_rank]);
 
       // Generate access token for new user
       const user = { username: username, userID: lb_rank, tankColor: tank_color };

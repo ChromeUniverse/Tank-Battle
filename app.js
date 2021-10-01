@@ -4,10 +4,8 @@ const cookieParser = require('cookie-parser')
 require('dotenv').config();
 
 // Custom module function imports
-const { sql_connect } = require('./sql_util');
 const { private } = require('./middleware/private');
 const { getHTML } = require('./misc');
-
 
 // 
 // set up Express and middleware
@@ -45,7 +43,7 @@ app.use('/signup', signupRouter);
 const loginRouter = require('./routes/login');
 app.use('/login', loginRouter);
 
-// basic routes
+// basic routes -> return HTMLs
 
 app.get('/', async (req, res) => { 
     return res.status(200).send(await getHTML('index.html'));
@@ -61,10 +59,9 @@ app.get('/lb', private, async (req, res)=> {
 
 
 // 
-// Start web server
+// Web server started!
 // 
 
 app.listen(PORT, async () => {    
-    await sql_connect();
     console.log(`Server listening on http://localhost:${PORT}`);
 });
