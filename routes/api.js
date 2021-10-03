@@ -1,9 +1,9 @@
 // module imports
 const express = require("express");
-const atob = require('atob');
 const { private } = require('../middleware/private');
 const pool = require('../sql_util');
 const jwt = require("jsonwebtoken");
+
 
 // Express Router setup
 const router = express.Router();
@@ -23,7 +23,6 @@ router.get('/user', async (req, res) => {
     if (query_result.length > 0) {
 
       console.log(query_result);
-      console.log(err);
       const q = query_result[0]
 
       // BinaryRow {
@@ -74,7 +73,8 @@ router.get('/user', async (req, res) => {
 // GET /lb      --> returns leaderboard
 router.get('/lb', async (req, res) => {
 
-  const name = JSON.parse(atob(req.token.split('.')[1])).username.toString();
+  const decoded = jwt.decode(req.token, {complete: true});
+  const name = decoded.payload.username.toString();
 
   // sorting by ascending leaderboard rank
 
@@ -86,7 +86,6 @@ router.get('/lb', async (req, res) => {
     if (query_result.length > 0) {
 
       console.log(query_result);
-      console.log(err);
 
       res.status(200);
       res.json({ error: false, lb: query_result });
