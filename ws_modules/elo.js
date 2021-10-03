@@ -14,13 +14,16 @@ function get_expected(rating1, rating2){
 }
 
 // get new
-function new_ratings(player1, player2){
+async function new_ratings(player1, player2){
 
   console.log('Got here!!!');
 
   // get current ratings
-  const current1 = player1.rating;
-  const current2 = player2.rating;
+  // const current1 = player1.rating;
+  // const current2 = player2.rating;
+
+  const current1 = await get_rating(player1);
+  const current2 = await get_rating(player2);
 
   console.log('\nCalculating new ratings for', player1.name, '-', current1, 'and', player2.name, '-', current2);
 
@@ -121,13 +124,13 @@ async function set_rating(player, newrating) {
 }
 
 function order(p1, p2) {
- if (p1.rank <  p2.rank) return -1;
- if (p1.rank == p2.rank) return 0;
- if (p1.rank >  p2.rank) return +1;
+  if (p1.rank <  p2.rank) return -1;
+  if (p1.rank == p2.rank) return 0;
+  if (p1.rank >  p2.rank) return +1;
 }
 
 
-function update_ratings_in_room(players){
+async function update_ratings_in_room(players){
 
   let players_ranked = Object.values(players).sort((p1,p2) => order(p1,p2));
 
@@ -140,17 +143,21 @@ function update_ratings_in_room(players){
 
     console.log('Now running elo simulation for players', p1.name, 'and', p2.name, '...');
 
-    const [ newrating1, newrating2 ] = new_ratings(p1, p2);
+    const [ newrating1, newrating2 ] = await new_ratings(p1, p2);
     
     p1.rating = newrating1;
     p2.rating = newrating2;
   }  
+  
+  // save new ratings in database
 
-  players_ranked.forEach(async (p) => {
+  // -> possible async optimization here:
+
+  for (const p of players_ranked) {
     const newrating = p.rating;
-    console.log('New rating for player', p.name,'-', newrating);
-    set_rating(p, newrating);
-  });
+    console.log('Saving new rating for player', p.name,'-', newrating);
+    await set_rating(p, newrating);
+  }
 
   update_leaderboard();
 }
