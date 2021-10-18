@@ -1,6 +1,8 @@
 // Package imports
 const express = require('express');
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const path = require('path');
+const favicon = require('serve-favicon');
 require('dotenv').config();
 
 // Custom module function imports
@@ -12,7 +14,8 @@ const { getHTML } = require('./misc');
 // 
 
 const app = express();
-app.use(cookieParser())
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(cookieParser());
 app.use(express.static('public'));
 app.use(express.json());
 
