@@ -1,23 +1,28 @@
 # _Tank Battle!_ Todo list
 
 1. Websockets server refactoring
-  * Bullet shoot functionality
-    * Add weapon cooldown
-    * Add reloading
 
-  * Collision Functions
-    * Player x Obstacle       **DONE!**
-    * Player x Bullet
-    * Player x Player
-    * Bullet x Obstacle
-    * Bullet x Bullet
+  * **Medium-Priority Improvements**
 
-  * Add animations
-    * WS animation events
+    * Index page refresh current room list
 
-  * Add game match logic
+    * Add Bullet HUD
 
-  * Add elo rating system
+    * Revamped User Page
 
-  * Add matchmaking
+      * Change tank color + Pre-Selected color pallete
+
+      * Change password
+
+      * Delete user
+
+      * Profile pics
+
+    * Add matchmaking system
+
+  * **Minor Improvements**
+
+    * Colored kill/win messages
+
+    * Chat system?
 
