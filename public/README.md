@@ -1,6 +1,6 @@
 # Public static files
 
-All public HTMLs, client-side scripts and stylesheets are located here.
+All public frontend scripts and stylesheets are located here.
 
 ## Folder structure
 
