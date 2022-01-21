@@ -6,7 +6,8 @@
 ## Lag Mitigation
 - *Coming soon!*
 
-## Game Backend
+## Game/Websockets Backend
+- [ ] Authenticate user with DB query on websocket upgrade request
 - [ ] Create a websockets chat backend
 
 ## Graphics

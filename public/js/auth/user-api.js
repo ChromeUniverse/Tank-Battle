@@ -64,8 +64,7 @@ async function user_api_main() {
         let b = parseInt(user_tank_color.substr(5,2), 16);
         console.log(r,g,b);
 
-        let color_block_text_color = '';
-        
+        // contrast formula
         if ( (r*0.299 + g*0.587 + b*0.114) > 186 ) text_color = '#000000' 
         else text_color = '#ffffff';
 
