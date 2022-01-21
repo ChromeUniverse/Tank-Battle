@@ -1,28 +1,31 @@
-# _Tank Battle!_ Todo list
+# *Tank Battle!* - Todo List
 
-1. Websockets server refactoring
+## Known Issues
+- [ ] Reload/cooldown system needs to be enabled only while match is running
 
-  * **Medium-Priority Improvements**
+## Lag Mitigation
+- *Coming soon!*
 
-    * Index page refresh current room list
+## Game Backend
+- [ ] Create a websockets chat backend
 
-    * Add Bullet HUD
+## Graphics
+- [ ] Add Colored kill/win messages
+- [ ] Add Bullet HUD
 
-    * Revamped User Page
+## Backend
+- [ ] Minizize backend
+- [ ] Move all server files to a deddicated directory
 
-      * Change tank color + Pre-Selected color pallete
+## Frontend
+- [ ] ***Start Vue.js migration!***
 
-      * Change password
+- Home page
+  - [ ] Refresh current room list periodically
 
-      * Delete user
-
-      * Profile pics
-
-    * Add matchmaking system
-
-  * **Minor Improvements**
-
-    * Colored kill/win messages
-
-    * Chat system?
-
+- Profile page
+  - [ ] Change tank color
+  - [ ] Change password
+  - [ ] Delete account
+  - [ ] Profile pics
+  - [ ] Create public profile pages
