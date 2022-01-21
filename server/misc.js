@@ -65,7 +65,7 @@ function generateAccessToken(user) {
 
 // asynchronously fetch HTML file from "/private/" folder
 async function getHTML(name){
-  const path_to_htmls = '/home/lucca/Documents/Programming/tank_battle/private/html/'
+  const path_to_htmls = '/home/lucca/Coding/Projects/tank_battle/server/private/html/'
   const file = await readFile(path_to_htmls + name, 'UTF-8');
   return file.toString();
 }
