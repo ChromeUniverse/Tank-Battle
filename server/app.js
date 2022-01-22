@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const favicon = require('serve-favicon');
 require('dotenv').config();
+const cors = require('cors');
 
 // Custom module function imports
 const { private } = require('./middleware/private');
@@ -15,6 +16,9 @@ const { getHTML } = require('./misc');
 
 const app = express();
 // app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(cors({
+    origin: ['http://localhost:8080', 'http://localhost:5000']
+}));
 app.use(cookieParser());
 app.use(express.static('public'));
 app.use(express.json());
