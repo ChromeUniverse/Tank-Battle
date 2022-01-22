@@ -1,4 +1,4 @@
-# *Tank Battle!* - Todo List
+# *Tank Battle!* Backend To-do List
 
 ## Known Issues
 - [ ] Reload/cooldown system needs to be enabled only while match is running
@@ -17,16 +17,3 @@
 ## Backend
 - [ ] Minizize backend
 - [ ] Move all server files to a deddicated directory
-
-## Frontend
-- [ ] ***Start Vue.js migration!***
-
-- Home page
-  - [ ] Refresh current room list periodically
-
-- Profile page
-  - [ ] Change tank color
-  - [ ] Change password
-  - [ ] Delete account
-  - [ ] Profile pics
-  - [ ] Create public profile pages
