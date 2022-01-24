@@ -1,5 +1,9 @@
 # *Tank Battle!* Vue Frontend To-do List 
 
+## Known Issues
+
+- [ ] Use Vuex or Mitt for updating UI when user is logged in? -> need to solve edge cases -> properly implement app lifecycle
+
 ## Views
 
 ### Home
@@ -8,18 +12,19 @@
 
 ### Login
 
-- [ ] Build and style login form 
-- [ ] Integrate API/backend logic
+- [X] ~~Build and style login form ~~
+- [X] ~~Integrate API/backend logic~~
 - [ ] Add error handling
 
 ### Signup
 
-- [ ] Copy login view, but for the signup page, I guess ¯\\\_(ツ)_/¯
+- [X] ~~Copy login view, but for the signup page, I guess ¯\\\_(ツ)_/¯~~
+- [] Copy login view, but for the signup page, I guess ¯\\\_(ツ)_/¯
 
 ### Leaderboard
 
-- [ ] Build and style a table, I guess ¯\\\_(ツ)_/¯
-- [ ] Fetch data from backend
+- [X] ~~Build and style a table, I guess ¯\\\_(ツ)_/¯~~
+- [X] ~~Fetch data from backend~~
 
 ### User Profiles
 

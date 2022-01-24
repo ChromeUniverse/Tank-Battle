@@ -1,4 +1,4 @@
-# client
+# *Tank Battte* Vue.js Frontend
 
 ## Project setup
 ```
