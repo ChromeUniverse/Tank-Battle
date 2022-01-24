@@ -115,10 +115,16 @@ router.get('/lb', async (req, res) => {
 
 });
 
-// Get /secret  --> returns shenanigans :-P
+// GET /secret  --> returns shenanigans :-P
 router.get('/secret', async (req,res) => {
   const text = "You're a sneaky one, aren't you? If you've managed to reach this endpoint, send me a DM to get a prize! Discord: Lucca hash-two-seven-four-four";
   return res.status(418).json({error: false, message: text});
+});
+
+// GET /logout  --> logs out user
+router.get('/logout', async (req,res) => {
+  res.status(200).clearCookie("token").json({error: false});         
+  return;;
 });
 
 module.exports = router;
