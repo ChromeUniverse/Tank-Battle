@@ -17,7 +17,8 @@ const { getHTML } = require('./misc');
 const app = express();
 // app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(cors({
-    origin: ['http://localhost:8080', 'http://localhost:5000']
+    origin: ['http://localhost:8080', 'http://localhost:5000'],
+    credentials: true
 }));
 app.use(cookieParser());
 app.use(express.static('public'));
