@@ -1,7 +1,7 @@
 <template>
   <footer>
 
-    <hr>
+    <!-- <hr> -->
 
     <p>© Lucca Rodrigues 2022</p>
 
@@ -25,7 +25,6 @@ export default {
 <style>
 
 footer {
-  font-family: 'Recursive';
   font-weight: bold;
   font-size: 1em;
   color: var(--color5);
@@ -34,6 +33,7 @@ footer {
 }
 
 footer p {
+  font-family: 'Recursive';
   margin-bottom: 5px;
 }
 
@@ -51,11 +51,9 @@ footer a:visited {
 
 footer a:hover {
   color: var(--color5);
-}
-
-.links {
-  /* display: flex; */
-  /* flex-direction: row; */
+  text-decoration: underline;
+  text-decoration-color: var(--color4);
+  text-decoration-thickness: 3px;
 }
 
 </style>
